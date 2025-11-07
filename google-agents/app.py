@@ -2,60 +2,65 @@ import streamlit as st
 import asyncio
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
-from google.adk.events import Event, EventActions  # you may need to adjust imports
+from google.genai import types
 from my_agent.agent import root_agent
 import uuid
+from dotenv import load_dotenv
+
+load_dotenv()
+
+APP_NAME = "content_creator_root_agent"
 
 st.set_page_config(page_title="Multi-Agent AI Writer", page_icon="🧠")
 st.title("🧠 AI Multi-Agent Content Creator")
 
-# Init session service once globally
+# Initialize session service once globally
 if "session_service" not in st.session_state:
     st.session_state.session_service = InMemorySessionService()
 
-# Init or restore session per user
-if "adk_session" not in st.session_state:
-    user_id = f"user_{uuid.uuid4().hex[:8]}"
-    st.session_state.user_id = user_id
-    st.session_state.adk_session = st.session_state.session_service.create_session(
-        app_name="content_creator_root_agent",
+# Async helper to create session
+async def create_session_async(session_service, user_id):
+    return await session_service.create_session(
+        app_name=APP_NAME,
         user_id=user_id,
         state={}
     )
 
+# Initialize or restore session on load
+if "adk_session" not in st.session_state:
+    user_id = f"user_{uuid.uuid4().hex[:8]}"
+    st.session_state.user_id = user_id
+    st.session_state.adk_session = asyncio.run(create_session_async(st.session_state.session_service, user_id))
+
 user_input = st.text_area("✍️ Enter a topic, link, or idea for your article:", height=120)
 
-async def run_agent(runner):
-    response = None
-    async for event in runner.run_async():
+async def run_agent(runner, user_id, session_id, content):
+    async for event in runner.run_async(user_id=user_id, session_id=session_id, new_message=content):
         if event.is_final_response():
-            response = event
-            break
-    return response
+            return event
+    return None
 
 if st.button("Generate Content"):
     if not user_input.strip():
         st.warning("Please enter a topic first.")
     else:
         runner = Runner(
-            app_name="content_creator_root_agent",
+            app_name=APP_NAME,
             agent=root_agent,
             session_service=st.session_state.session_service
         )
-        
-        # Add the user's input as an event to the session
-        user_event = Event(
-            author=EventAuthor.USER,
-            content=user_input
-        )
-        st.session_state.session_service.append_event(
-            st.session_state.adk_session,
-            user_event
-        )
-        
+
+        content = types.Content(parts=[types.Part(text=user_input)])
+
         with st.spinner("🤖 Agents are working together..."):
-            # Run async event loop without arguments
-            response = asyncio.run(run_agent(runner))
+            response = asyncio.run(
+                run_agent(
+                    runner,
+                    user_id=st.session_state.user_id,
+                    session_id=st.session_state.adk_session.id,  # use `.id` here
+                    content=content
+                )
+            )
 
         if response:
             st.subheader("📝 Generated Article")
@@ -64,9 +69,8 @@ if st.button("Generate Content"):
             st.warning("No response from agent.")
 
 if st.button("Start New Session"):
-    st.session_state.adk_session = st.session_state.session_service.create_session(
-        app_name="content_creator_root_agent",
-        user_id=f"user_{uuid.uuid4().hex[:8]}",
-        state={}
-    )
+    new_user_id = f"user_{uuid.uuid4().hex[:8]}"
+    st.session_state.user_id = new_user_id
+    # Await the async session creation here!
+    st.session_state.adk_session = asyncio.run(create_session_async(st.session_state.session_service, new_user_id))
     st.success("✅ New session started! You can now enter a fresh topic.")
