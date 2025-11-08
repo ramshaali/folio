@@ -41,17 +41,24 @@ async def generate_article(req: GenerateRequest):
     content = types.Content(parts=[types.Part(text=req.prompt)])
 
     # 5️⃣ Run the agent
-    async for event in runner.run_async(user_id=user_id, session_id=session_id, new_message=content):
-        print("Event content parts:", [p.text for p in event.content.parts])
-        if event.is_final_response():
-            result = event
-            break
+    final_event = None
+    async for event in runner.run_async(
+        user_id=user_id,
+        session_id=session_id,
+        new_message=content
+    ):
+        # Check if event has actual text
+        if event.content.parts and any(p.text for p in event.content.parts):
+            final_event = event  # Keep updating until the last one
 
-    else:
+    if not final_event:
         raise HTTPException(status_code=500, detail="No response from agent")
+
+    # Concatenate all text parts from the final event
+    output_text = " ".join([p.text for p in final_event.content.parts if p.text])
 
     return {
         "session_id": session_id,
         "user_id": user_id,
-        "output": result.content.parts[0].text,
+        "output": output_text
     }
