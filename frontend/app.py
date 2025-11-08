@@ -41,22 +41,32 @@ if st.button("Generate Content"):
             st.session_state.session_id = data["session_id"]
             st.session_state.user_id = data["user_id"]
 
+            # 🧠 Show each agent’s output clearly
+            st.subheader("🤖 Agent Collaboration Log")
+            for agent_data in data.get("agent_outputs", []):
+                agent_name = agent_data.get("agent_name", "Unknown Agent")
+                text_output = agent_data.get("text", "")
+                with st.expander(f"🧩 {agent_name}", expanded=False):
+                    st.write(text_output)
+
+            # 🎯 Show final output separately
+            st.markdown("---")
+            st.subheader("🏁 Final Output")
             text_output = data["output"]
+
             try:
                 parsed = json.loads(text_output)
                 if "image_base64" in parsed:
-                    st.subheader("📝 Generated Article")
                     st.write(parsed.get("article_text", "No article text provided."))
                     st.write(f"**Image Prompt:** {parsed['image_prompt']}")
                     img_data = base64.b64decode(parsed["image_base64"])
                     image = Image.open(io.BytesIO(img_data))
                     st.image(image, caption="Generated Image")
                 else:
-                    st.subheader("📝 Article")
                     st.write(text_output)
             except json.JSONDecodeError:
-                st.subheader("📝 Article")
                 st.write(text_output)
+
         else:
             st.error(f"Backend error: {response.text}")
 
