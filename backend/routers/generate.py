@@ -4,6 +4,7 @@ from google.adk.runners import Runner
 from google.genai import types
 from core.session_manager import session_service, create_session
 from my_agent.agent import root_agent
+from fastapi.responses import StreamingResponse
 import uuid
 import asyncio
 import json
@@ -16,9 +17,9 @@ class GenerateRequest(BaseModel):
     session_id: str | None = None
     user_id: str | None = None
     
-    
-@router.post("/")
-async def generate_article(req: GenerateRequest):
+
+@router.post("/stream")
+async def generate_article_stream(req: GenerateRequest):
     if not req.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt cannot be empty")
 
@@ -38,31 +39,22 @@ async def generate_article(req: GenerateRequest):
 
     content = types.Content(parts=[types.Part(text=req.prompt)])
 
-    agent_outputs = []  # 👈 will store responses from all subagents
+    async def event_generator():
+        async for event in runner.run_async(
+            user_id=user_id,
+            session_id=session_id,
+            new_message=content
+        ):
+            if event.content and event.content.parts and any(p.text for p in event.content.parts):
+                text_output = " ".join([p.text for p in event.content.parts if p.text])
+                chunk = {
+                    "agent_name": event.author,
+                    "text": text_output
+                }
+                yield json.dumps(chunk) + "\n"  # newline-separated JSON chunks
 
-    async for event in runner.run_async(
-        user_id=user_id,
-        session_id=session_id,
-        new_message=content
-    ):
-        # Each event has event.agent_name (the subagent that produced it)
-        if event.content and event.content.parts and any(p.text for p in event.content.parts):
-            text_output = " ".join([p.text for p in event.content.parts if p.text])
-            agent_outputs.append({
-                "agent_name": event.author,
-                "text": text_output
-            })
+        # send a final signal that streaming is done
+        yield json.dumps({"status": "done"}) + "\n"
 
-    if not agent_outputs:
-        raise HTTPException(status_code=500, detail="No response from agent")
+    return StreamingResponse(event_generator(), media_type="application/json")
 
-    # Final output is the last agent’s message
-    final_output = agent_outputs[-1]["text"]
-    print("Agents output:")
-    print(json.dumps(agent_outputs, indent=2, ensure_ascii=False))
-    return {
-        "session_id": session_id,
-        "user_id": user_id,
-        "output": final_output,
-        "agent_outputs": agent_outputs 
-    }
