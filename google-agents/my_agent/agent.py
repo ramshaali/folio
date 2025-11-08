@@ -1,7 +1,7 @@
 from google.adk.agents import Agent
 from google.adk.agents import Agent, LlmAgent
-from my_agent.utils import google_search_custom
-
+from my_agent.utils import google_search_custom, generate_image_from_article
+from google.adk.agents import SequentialAgent
 import logging
 
 logging.basicConfig(
@@ -13,17 +13,19 @@ MODEL = "gemini-2.5-pro"
 
 # 1️⃣ Extraction Agent
 extract_agent = LlmAgent(
-    model="gemini-2.5-flash-lite",
+    model="gemini-2.5-flash",
     name="extract_agent",
     description="Extracts entities, URLs, and topic keywords from the user's input.",
+    output_key="extracted_data",
     instruction=(
-        "You are the Extractor Agent. "
-        "Given a user prompt, identify if it includes a website, topic, or keyword. "
-        "If a link is present, extract it. "
-        "If no link, extract the best keyword or phrase for searching. "
-        "If no clear keyword, fallback to the full user input as the search query."
+        "You are the Extractor Agent. Given a user prompt, identify if it includes a website, topic, or keyword. "
+        "If a link is present, extract it. If no link, extract the best keyword or phrase for searching. "
+        "If no clear keyword, fallback to the full user input as the search query. "
+        "**Never** delegate or transfer control to any other agent. "
+        "**Always return your extraction result directly as plain text only, without any function calls or JSON formatting.**"
     )
 )
+
 
 
 
@@ -34,8 +36,9 @@ web_search_tool = google_search_custom
 websearch_agent = Agent(
     name="websearch_agent",
     model="gemini-2.5-flash-lite",
-    description="Searches the web for background information using SERP API.",
-    instruction="Use the serp_search_tool to retrieve accurate, real-time info about the user's topic.",
+    description="Searches the web for background information using google search.",
+    output_key="search_results",
+    instruction="Use the web_search_tool to retrieve accurate, real-time info about the user's topic.",
     tools=[web_search_tool],
 )
 
@@ -45,6 +48,7 @@ writer_agent = LlmAgent(
     model="gemini-2.5-flash-lite",
     name="writer_agent",
     description="Writes an engaging, Medium-style article using the extracted prompt and search results.",
+    output_key="draft_article",
     instruction=(
         "You are the Writer Agent. Given the user prompt and retrieved web content, "
         "compose a coherent, human-like Medium article with an introduction, "
@@ -57,26 +61,57 @@ refine_agent = LlmAgent(
     model="gemini-2.5-flash-lite",
     name="refine_agent",
     description="Improves tone, grammar, clarity, and flow of the written article.",
+    output_key="refined_article",
     instruction=(
         "You are the Refine Agent. When invoked, enhance the writing quality, "
         "improving readability and ensuring smooth transitions without altering meaning."
     )
 )
 
-# 🧠 Root Agent orchestrates the workflow
-root_agent = Agent(
-    name="content_creator_root_agent",
+# 5️⃣ Image Generation Agent
+image_tool=generate_image_from_article
+image_gen_agent = Agent(
+    name="image_gen_agent",
     model="gemini-2.5-flash-lite",
+    description="Generates a relevant AI image for the final article using Imagen 4.",
+    instruction=(
+        "You are the Image Generation Agent. Given the final article text, "
+        "first create a concise but descriptive prompt that represents the article visually. "
+        "Then use the generate_image_from_article tool to create one image."
+    ),
+    tools=[image_tool],
+)
+
+# 🧠 Root Agent orchestrates the workflow
+
+
+content_agent_tool = SequentialAgent(
+    name="content_creator_root_agent_sequential",
     description=(
         "You are the Root Coordinator Agent. Manage article creation by:\n"
         "1. Asking ExtractAgent to parse the prompt.\n"
-        "2. Passing topic or link to WebSearchAgent to gather info via SERP API.\n"
+        "2. Passing topic or link to WebSearchAgent to gather info via google search.\n"
         "3. Giving extracted info to WriterAgent.\n"
-        "4. Optionally using RefineAgent for polish."
+        "4. Finally, invoking ImageGenAgent to generate an image for the article.\n\n"
+        "**After each sub-agent finishes, pass its output to the next one in sequence.** "
+        "Do not stop after extract_agent — always continue the pipeline until completion."
     ),
-    sub_agents=[extract_agent, websearch_agent, writer_agent, refine_agent],
+    sub_agents=[extract_agent, websearch_agent, writer_agent,  image_gen_agent],
 )
 
+
+
+root_agent = LlmAgent(
+    name="content_creator_root_agent",
+    model="gemini-2.5-flash-lite",
+    description=(
+        "You are the Root Coordinator Agent. \n"
+        "If the user wants to write a new article, invoke content_agent_tool.\n"
+        "If the user wants to edit or refine an existing article, invoke refine_agent.\n"
+        "Use function calls to invoke the correct tool."
+    ),
+    sub_agents=[content_agent_tool, refine_agent],   # keep refine agent as a sub_agent for transfer if needed
+)
 
 
 #run using : adk web --log_level DEBUG
