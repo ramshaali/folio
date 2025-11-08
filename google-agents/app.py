@@ -18,6 +18,7 @@ APP_NAME = "content_creator_root_agent"
 st.set_page_config(page_title="🧠 AI Multi-Agent Content Creator", page_icon="🧠")
 st.title("🧠 AI Multi-Agent Content Creator")
 
+# Initialize session service once globally
 if "session_service" not in st.session_state:
     st.session_state.session_service = InMemorySessionService()
 
@@ -28,10 +29,11 @@ async def create_session_async(session_service, user_id):
         state={}
     )
 
+# Only create user_id and session if not existing yet
+if "user_id" not in st.session_state:
+    st.session_state.user_id = f"user_{uuid.uuid4().hex[:8]}"
 if "adk_session" not in st.session_state:
-    user_id = f"user_{uuid.uuid4().hex[:8]}"
-    st.session_state.user_id = user_id
-    st.session_state.adk_session = asyncio.run(create_session_async(st.session_state.session_service, user_id))
+    st.session_state.adk_session = asyncio.run(create_session_async(st.session_state.session_service, st.session_state.user_id))
 
 user_input = st.text_area("✍️ Enter a topic, link, or idea for your article:", height=120)
 
@@ -67,37 +69,28 @@ if st.button("Generate Content"):
         if response:
             text_output = response.content.parts[0].text
 
-            # Try to parse as JSON to check if this is article+image response (new article)
             try:
                 parsed = json.loads(text_output)
                 if "image_base64" in parsed and "image_prompt" in parsed:
                     st.subheader("📝 Generated Article")
-                    # Display the article text separately, which should be passed along in the chain,
-                    # but if not, you may want to modify the agent to include article text in this JSON
-                    # For now, just display prompt and image
+                    st.write(parsed.get("article_text", "No article text included."))
 
                     st.write(f"**Image Prompt:** {parsed['image_prompt']}")
 
                     img_data = base64.b64decode(parsed["image_base64"])
                     image = Image.open(io.BytesIO(img_data))
                     st.image(image, caption="Generated Image")
-
-                    # Optionally also show the original article text if you modify the image generation to include it
-                    # If not included, you can just say:
-                    st.info("Article text is not included in image generation output. You may want to update the pipeline to include article text here.")
                 else:
-                    # This is likely refined article text (string)
                     st.subheader("📝 Refined Article")
                     st.write(text_output)
-
             except json.JSONDecodeError:
-                # Not JSON, so treat as simple text (refined or direct article)
                 st.subheader("📝 Article")
                 st.write(text_output)
         else:
             st.warning("No response from agent.")
 
 if st.button("Start New Session"):
+    # Create new user_id and new session explicitly only here
     new_user_id = f"user_{uuid.uuid4().hex[:8]}"
     st.session_state.user_id = new_user_id
     st.session_state.adk_session = asyncio.run(create_session_async(st.session_state.session_service, new_user_id))

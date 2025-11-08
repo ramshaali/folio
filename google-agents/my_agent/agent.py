@@ -60,13 +60,22 @@ writer_agent = LlmAgent(
 refine_agent = LlmAgent(
     model="gemini-2.5-flash-lite",
     name="refine_agent",
-    description="Improves tone, grammar, clarity, and flow of the written article.",
+    description=(
+        "Edits and improves the article based on the user's instructions. "
+        "Focus on enhancing tone, grammar, clarity, and flow. "
+        "Follow any specific user requests for changes (e.g., add conclusion, make more formal). "
+        "Do NOT call or transfer to other agents or functions."
+    ),
     output_key="refined_article",
     instruction=(
-        "You are the Refine Agent. When invoked, enhance the writing quality, "
-        "improving readability and ensuring smooth transitions without altering meaning."
+        "You are the Refine Agent. When invoked, improve the provided article text "
+        "by enhancing tone, grammar, clarity, and flow according to the user's instructions. "
+        "Apply any user-specified edits exactly as requested. "
+        "Do NOT call or transfer control to other agents or functions. "
+        "Return only the fully refined article text as a plain response."
     )
 )
+
 
 # 5️⃣ Image Generation Agent
 image_tool=generate_image_from_article
@@ -92,11 +101,9 @@ content_agent_tool = SequentialAgent(
         "1. Asking ExtractAgent to parse the prompt.\n"
         "2. Passing topic or link to WebSearchAgent to gather info via google search.\n"
         "3. Giving extracted info to WriterAgent.\n"
-        "4. Finally, invoking ImageGenAgent to generate an image for the article.\n\n"
-        "**After each sub-agent finishes, pass its output to the next one in sequence.** "
         "Do not stop after extract_agent — always continue the pipeline until completion."
     ),
-    sub_agents=[extract_agent, websearch_agent, writer_agent,  image_gen_agent],
+    sub_agents=[extract_agent, websearch_agent, writer_agent],
 )
 
 
@@ -106,7 +113,7 @@ root_agent = LlmAgent(
     model="gemini-2.5-flash-lite",
     description=(
         "You are the Root Coordinator Agent. \n"
-        "If the user wants to write a new article, invoke content_agent_tool which returns article + image JSON.\n"
+        "If the user wants to write a new article, invoke content_agent_tool which returns article text.\n"
         "If the user wants to edit or refine an existing article, invoke refine_agent which returns only the refined article text.\n"
         "Use function calls to invoke the correct tool."
     ),
