@@ -4,6 +4,7 @@ import json
 import base64
 from PIL import Image
 import io
+import httpx
 from utils.api_client import BACKEND_URL
 
 st.set_page_config(page_title="🧠 Multi-Agent Content Creator", page_icon="🧠")
@@ -29,46 +30,30 @@ def start_new_session():
     res = requests.post(f"{BACKEND_URL}/api/session/new")
     return res
 
+
+
+def stream_agent_outputs(prompt):
+    payload = {
+        "prompt": prompt,
+        "session_id": st.session_state.session_id,
+        "user_id": st.session_state.user_id,
+    }
+    with httpx.stream("POST", f"{BACKEND_URL}/api/generate/stream", json=payload, timeout=None) as response:
+        for line in response.iter_lines():
+            if line:
+                data = json.loads(line)
+                if data.get("status") == "done":
+                    break
+                yield data.get("agent_name", "Unknown"), data.get("text", "")
+
 if st.button("Generate Content"):
     if not user_input.strip():
         st.warning("Please enter a topic first.")
     else:
-        st.info("🤖 Agents are working together...")
-        response = generate_article(user_input)
+        placeholder = st.empty()
+        for agent_name, text in stream_agent_outputs(user_input):
+            placeholder.markdown(f"**{agent_name}**:\n{text}\n---")
 
-        if response.status_code == 200:
-            data = response.json()
-            st.session_state.session_id = data["session_id"]
-            st.session_state.user_id = data["user_id"]
-
-            # 🧠 Show each agent’s output clearly
-            st.subheader("🤖 Agent Collaboration Log")
-            for agent_data in data.get("agent_outputs", []):
-                agent_name = agent_data.get("agent_name", "Unknown Agent")
-                text_output = agent_data.get("text", "")
-                with st.expander(f"🧩 {agent_name}", expanded=False):
-                    st.write(text_output)
-
-            # 🎯 Show final output separately
-            st.markdown("---")
-            st.subheader("🏁 Final Output")
-            text_output = data["output"]
-
-            try:
-                parsed = json.loads(text_output)
-                if "image_base64" in parsed:
-                    st.write(parsed.get("article_text", "No article text provided."))
-                    st.write(f"**Image Prompt:** {parsed['image_prompt']}")
-                    img_data = base64.b64decode(parsed["image_base64"])
-                    image = Image.open(io.BytesIO(img_data))
-                    st.image(image, caption="Generated Image")
-                else:
-                    st.write(text_output)
-            except json.JSONDecodeError:
-                st.write(text_output)
-
-        else:
-            st.error(f"Backend error: {response.text}")
 
 if st.button("Start New Session"):
     res = start_new_session()
