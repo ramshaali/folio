@@ -77,12 +77,12 @@ image_gen_agent = Agent(
     instruction=(
         "You are the Image Generation Agent. Given the final article text, "
         "first create a concise but descriptive prompt that represents the article visually. "
-        "Then use the generate_image_from_article tool to create one image."
+        "Then use the generate_image_from_article tool to create one image. "
+        "Return a JSON string containing article_text, image_prompt, and image_base64."
     ),
-    tools=[image_tool],
+    tools=[generate_image_from_article],
 )
 
-# 🧠 Root Agent orchestrates the workflow
 
 
 content_agent_tool = SequentialAgent(
@@ -100,17 +100,17 @@ content_agent_tool = SequentialAgent(
 )
 
 
-
+# 🧠 Root Agent orchestrates the workflow
 root_agent = LlmAgent(
     name="content_creator_root_agent",
     model="gemini-2.5-flash-lite",
     description=(
         "You are the Root Coordinator Agent. \n"
-        "If the user wants to write a new article, invoke content_agent_tool.\n"
-        "If the user wants to edit or refine an existing article, invoke refine_agent.\n"
+        "If the user wants to write a new article, invoke content_agent_tool which returns article + image JSON.\n"
+        "If the user wants to edit or refine an existing article, invoke refine_agent which returns only the refined article text.\n"
         "Use function calls to invoke the correct tool."
     ),
-    sub_agents=[content_agent_tool, refine_agent],   # keep refine agent as a sub_agent for transfer if needed
+    sub_agents=[content_agent_tool, refine_agent],
 )
 
 
