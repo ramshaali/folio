@@ -1,7 +1,11 @@
 from google import genai
 from google.genai import types
+from PIL import Image
+import io
 import logging
 from dotenv import load_dotenv
+import base64
+import json
 load_dotenv()
 
 def google_search_custom(query: str) -> str:
@@ -32,38 +36,58 @@ def google_search_custom(query: str) -> str:
 
 
 
-def generate_image_from_article(article_text: str) -> dict:
-    """Generate an AI image for the given article using Imagen 4."""
+
+def generate_image_from_article(article_text: str) -> str:
     client = genai.Client()
 
-    # Step 1: Generate a descriptive image prompt
     try:
+        # Step 1: Generate image prompt
         prompt_response = client.models.generate_content(
             model="gemini-2.5-flash-lite",
-            contents=f"Generate a short but vivid prompt for an AI image generation model to visualize the following article:\n\n{article_text}\n\nPrompt:",
+            contents=[f"Generate a short but vivid prompt for an AI image generation model to visualize the following article:\n\n{article_text}\n\nPrompt:"],
         )
-        image_prompt = prompt_response.text.strip()
+        image_prompt = None
+        for part in prompt_response.parts:
+            if part.text:
+                image_prompt = part.text.strip()
+                break
+        if not image_prompt:
+            raise ValueError("Failed to generate image prompt")
         logging.info(f"Generated Image Prompt: {image_prompt}")
     except Exception as e:
         logging.error(f"Prompt generation failed: {e}")
-        return {"error": str(e)}
+        return json.dumps({"error": str(e), "article_text": article_text})
 
-    # Step 2: Generate the image using Imagen
     try:
-        image_response = client.models.generate_images(
-            model="imagen-4.0-generate-001",
-            prompt=image_prompt,
-            config=types.GenerateImagesConfig(number_of_images=1),
+        # Step 2: Generate image using prompt
+        image_response = client.models.generate_content(
+            model="gemini-2.5-flash-image",
+            contents=[image_prompt],
         )
-        image_data = image_response.generated_images[0].image
-        return {
+        image = None
+        for part in image_response.parts:
+            if part.inline_data:
+                image = part.as_image()
+                break
+        if image is None:
+            raise ValueError("No image data received")
+
+        # Convert image to base64
+        buffered = io.BytesIO()
+        image.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+
+        # Return combined JSON with article text, image prompt, and base64 image
+        result = {
+            "article_text": article_text,
             "image_prompt": image_prompt,
-            "image_data": image_data,
+            "image_base64": img_str
         }
+        return json.dumps(result)
+
     except Exception as e:
         logging.error(f"Image generation failed: {e}")
-        return {"error": str(e)}
-    
-    
+        return json.dumps({"error": str(e), "article_text": article_text})
+
 # result = generate_image_from_article("This is a test article about AI.")
 # print(result)
