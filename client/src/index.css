@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* -----------------------
+   Theme Variables
+----------------------- */
+@theme {
+  /* Colors */
+  --color-primary: #B38B59;       /* Gold */
+  --color-secondary: #F8F5F0;     /* Light background */
+  --color-accent: #2C2C2C;        /* Dark text */
+  --color-muted: #5C5C5C;
+  
+  /* Fonts */
+  --font-playfair: 'Playfair Display', serif;
+  --font-lora: 'Lora', serif;
+  --font-inter: 'Inter', sans-serif;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+
+  /* Radius */
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 0.3s ease forwards;
+}

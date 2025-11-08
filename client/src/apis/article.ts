@@ -1,0 +1,54 @@
+import { api } from "../utils/api";
+
+export interface StreamChunk {
+    agent_name: string;
+    text: string;
+    status?: string;
+}
+
+// Start a new session
+export const startNewSession = async () => {
+    return api.post("/api/session/new");
+};
+
+// Generate a full article
+export const generateArticle = async (prompt: string, sessionId: string | null, userId: string | null) => {
+    return api.post("/api/generate", {
+        prompt,
+        session_id: sessionId,
+        user_id: userId,
+    });
+};
+
+// Stream agent outputs (async generator)
+export const streamAgentOutputs = async function* (prompt: string, sessionId: string | null, userId: string | null) {
+    console.log(`${import.meta.env.VITE_API_BASE_URL}`);
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/generate/stream`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, session_id: sessionId, user_id: userId }),
+        mode: "cors", // 🔥 ensures preflight is handled
+    });
+
+
+    const reader = res.body?.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    if (!reader) return;
+
+    while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+            if (!line.trim()) continue;
+            const data = JSON.parse(line);
+            if (data.status === "done") return;
+            yield data;
+        }
+    }
+};
