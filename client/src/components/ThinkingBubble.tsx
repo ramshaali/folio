@@ -1,38 +1,89 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
 interface ThinkingBubbleProps {
-  updates: string[]; // Array of incremental messages
-  onComplete?: () => void;
+  agentName: string;
+  agentText: string;
+  isActive: boolean;
 }
 
-export const ThinkingBubble: React.FC<ThinkingBubbleProps> = ({ updates, onComplete }) => {
-  const [displayText, setDisplayText] = useState<string>("");
-  const [step, setStep] = useState(0);
+export const ThinkingBubble: React.FC<ThinkingBubbleProps> = ({ 
+  agentName, 
+  agentText, 
+  isActive 
+}) => {
+  const [displayText, setDisplayText] = useState('');
+  const [dots, setDots] = useState('');
 
+  // Typing animation for agent text
   useEffect(() => {
-    if (step >= updates.length) {
-      onComplete?.();
+    if (!agentText) {
+      setDisplayText('');
       return;
     }
 
-    const text = updates[step];
-    let i = 0;
+    setDisplayText('');
+    let currentIndex = 0;
+    const text = agentText;
+
     const interval = setInterval(() => {
-      setDisplayText((prev) => prev + text[i]);
-      i++;
-      if (i >= text.length) {
+      if (currentIndex < text.length) {
+        setDisplayText(prev => prev + text[currentIndex]);
+        currentIndex++;
+      } else {
         clearInterval(interval);
-        setDisplayText((prev) => prev + "\n");
-        setStep((prev) => prev + 1);
       }
-    }, 25); // typing speed
+    }, 10);
 
     return () => clearInterval(interval);
-  }, [step, updates, onComplete]);
+  }, [agentText]);
+
+  // Animated dots
+  useEffect(() => {
+    if (!isActive) {
+      setDots('');
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setDots(prev => {
+        if (prev === '...') return '';
+        return prev + '.';
+      });
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [isActive]);
+
+  if (!isActive) return null;
+
+  const getAgentAction = (name: string): string => {
+    const actions: { [key: string]: string } = {
+      'extract_agent': 'Analyzing your request and extracting key elements...',
+      'websearch_agent': 'Searching the web for relevant information...',
+      'writer_agent': 'Crafting engaging content based on research...',
+      'refine_agent': 'Polishing and refining the article...',
+      'image_gen_agent': 'Generating visual assets...',
+      'content_creator_root_agent': 'Coordinating the editorial team...'
+    };
+    return actions[name] || 'Processing';
+  };
 
   return (
-    <div className="max-w-[70%] p-3 rounded-xl border border-accent bg-gray-100 font-inter text-sm text-accent whitespace-pre-line animate-fade-in">
-      {displayText || "🤔 Thinking..."}
+    <div className="flex flex-row gap-2 animate-pulse">
+      <div className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-500 text-white">
+        ⚡
+      </div>
+      <div className="max-w-[70%] p-3 rounded-xl font-inter text-sm border border-gray-300 bg-gray-100">
+        <div className="text-gray-700">
+          <span className="font-semibold">{getAgentAction(agentName)}</span>
+          {displayText && (
+            <>
+              : <span className="text-gray-600">{displayText}</span>
+            </>
+          )}
+          <span className="text-gray-400">{dots}</span>
+        </div>
+      </div>
     </div>
   );
 };
