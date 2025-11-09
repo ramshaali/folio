@@ -23,6 +23,8 @@ interface ChatPanelProps {
   setSessionId: (id: string) => void;
   setUserId: (id: string) => void;
   setCurrentArticle: (article: any) => void;
+  isMobile?: boolean;
+  onSwitchToArticle?: () => void;
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({
@@ -31,6 +33,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   setSessionId,
   setUserId,
   setCurrentArticle,
+  isMobile = false,
+  onSwitchToArticle,
 }) => {
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -90,13 +94,20 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         if (chunk.agent_name === "writer_agent") {
           finalArticleContent = chunk.text;
           setCurrentArticle(chunk.text);
+          
+          // Auto-switch to article on mobile when article is ready
+          if (isMobile && onSwitchToArticle) {
+            setTimeout(() => onSwitchToArticle(), 500);
+          }
         }
       }
 
       if (finalArticleContent) {
         const completionMessage: Message = {
           role: "ai",
-          content: "**Article completed**\n\nYour article is ready in the preview panel.",
+          content: `**Article completed**\n\nYour article is ready in the preview panel.${
+            isMobile ? " Swipe or use the toggle to view it." : ""
+          }`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
         setChatHistory(prev => [...prev, completionMessage]);
@@ -125,13 +136,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-cream rounded-lg shadow-sm border border-border">
-      <Header onNewSession={handleNewSession} />
+      <Header onNewSession={handleNewSession} isMobile={isMobile} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <MessageList 
           messages={chatHistory} 
           currentAgent={currentAgent}
           isStreaming={isStreaming}
+          isMobile={isMobile}
         />
         
         <InputArea
@@ -139,6 +151,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           setInput={setInput}
           isStreaming={isStreaming}
           onSend={handleSend}
+          isMobile={isMobile}
         />
       </div>
     </div>

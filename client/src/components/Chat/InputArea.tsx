@@ -6,6 +6,7 @@ interface InputAreaProps {
   setInput: (value: string) => void;
   isStreaming: boolean;
   onSend: () => void;
+  isMobile?: boolean;
 }
 
 export const InputArea: React.FC<InputAreaProps> = ({
@@ -13,15 +14,17 @@ export const InputArea: React.FC<InputAreaProps> = ({
   setInput,
   isStreaming,
   onSend,
+  isMobile = false,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+      const maxHeight = isMobile ? 100 : 120;
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, maxHeight) + 'px';
     }
-  }, [input]);
+  }, [input, isMobile]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -31,38 +34,53 @@ export const InputArea: React.FC<InputAreaProps> = ({
   };
 
   return (
-    <div className="p-6 border-t border-border bg-cream">
+    <div className={`border-t border-border bg-cream ${
+      isMobile ? 'p-3' : 'p-4 lg:p-6'
+    }`}>
       <div className="relative">
         <textarea
           ref={textareaRef}
-          className="w-full p-4 pr-14 border border-border rounded-lg font-inter text-charcoal bg-white resize-none focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold transition-all duration-200 placeholder-warm-gray/60"
-          placeholder="Describe your article topic or provide specific instructions..."
+          className={`w-full border border-border rounded-lg font-inter text-charcoal bg-white resize-none focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold transition-all duration-200 placeholder-warm-gray/60 ${
+            isMobile 
+              ? 'p-3 pr-12 text-sm min-h-[50px] max-h-[100px]' 
+              : 'p-4 pr-14 text-base lg:text-sm min-h-[60px] max-h-[120px]'
+          }`}
+          placeholder={isMobile ? "Describe your article topic..." : "Describe your article topic or provide specific instructions..."}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={handleKeyPress}
           rows={1}
           disabled={isStreaming}
-          style={{
-            minHeight: '60px',
-            maxHeight: '120px'
-          }}
         />
         
+        {/* Send Button */}
         <button 
           onClick={onSend}
           disabled={isStreaming || !input.trim()}
-          className={`absolute right-4 bottom-4 p-2 rounded-lg transition-all duration-200 ${
+          className={`absolute transition-all duration-200 ${
+            isMobile
+              ? 'right-2 bottom-2 p-1.5 rounded-md'
+              : 'right-3 bottom-3 p-2 rounded-lg'
+          } ${
             isStreaming || !input.trim()
               ? 'bg-light-gray text-warm-gray cursor-not-allowed'
               : 'bg-gold text-cream hover:bg-gold/90 shadow-sm transform hover:scale-105'
           }`}
         >
-          <FaArrowUp className="text-sm" />
+          <FaArrowUp className={isMobile ? "text-xs" : "text-sm"} />
         </button>
       </div>
       
-      <div className="text-xs text-warm-gray text-center mt-3 font-inter">
-        {isStreaming ? "Editorial team is working..." : "Enter to send • Shift+Enter for new line"}
+      {/* Helper Text */}
+      <div className={`text-warm-gray text-center font-inter ${
+        isMobile ? 'text-xs mt-2' : 'text-xs lg:text-sm mt-3'
+      }`}>
+        {isStreaming 
+          ? "Editorial team is working..." 
+          : isMobile 
+            ? "Enter to send" 
+            : "Enter to send • Shift+Enter for new line"
+        }
       </div>
     </div>
   );
