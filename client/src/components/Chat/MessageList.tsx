@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { ThinkingBubble } from '../ThinkingBubble';
+import { ThinkingBubble } from './ThinkingBubble';
 import { FaExclamationTriangle } from "react-icons/fa";
 
 interface Message {
