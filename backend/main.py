@@ -1,20 +1,15 @@
 import uvicorn
 from core.router_register import register_routers
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from core.middleware import api_key_validator
+from starlette.middleware.base import BaseHTTPMiddleware
 
 app = FastAPI()
 
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.add_middleware(BaseHTTPMiddleware, dispatch=api_key_validator)
 
 register_routers(app)
+
 
 @app.get("/")
 def health_check():
