@@ -6,7 +6,7 @@ load_dotenv()
 
 
 
-API_KEY = os.environ.get("API_KEY")
+API_KEY = os.environ.get("APP_API_KEY")
 
 async def api_key_validator(request: Request, call_next):
     # Allow specific routes without API key
