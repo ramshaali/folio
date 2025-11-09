@@ -1,7 +1,0 @@
-@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;600&display=swap');
-:root{
-  --gold: #B38B59; --charcoal: #2C2C2C; --cream: #F8F5F0; --light-gray: #E8E5DE; --warm-gray: #5C5C5C;
-  --success: #2E5E2E; --warning: #8B5A2D; --error: #8B2635;
-}
-body{background:var(--cream);color:var(--charcoal);font-family:'Inter',sans-serif}
-h1.brand{font-family:'Merriweather',serif;color:var(--charcoal)}

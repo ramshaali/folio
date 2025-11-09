@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { generateArticle, startNewSession, streamAgentOutputs } from "../apis/article";
-import { FaPlus, FaArrowUp } from "react-icons/fa";
+import { FaArrowUp, FaRegComment } from "react-icons/fa";
 import { ThinkingBubble } from "./ThinkingBubble";
 import ReactMarkdown from 'react-markdown';
 
@@ -165,14 +165,30 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     <div className="flex flex-col h-full bg-secondary rounded-md border border-muted shadow-md">
       {/* Header */}
       <div className="flex justify-between items-center p-4 border-b border-muted bg-white">
-        <div className="flex items-center gap-2 font-playfair text-muted text-2xl font-bold">
-          Folio<span className="text-primary">.</span>
+        <div className="flex items-center gap-2">
+          {/* Replace Folio text with logo */}
+          <img 
+            src="assets/logo-sm.png" 
+            alt="Logo" 
+            className="h-8 w-auto" 
+            onError={(e) => {
+              // Fallback if logo doesn't exist
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              // Show text fallback
+              const fallback = document.createElement('div');
+              fallback.className = 'font-playfair text-muted text-2xl font-bold';
+              fallback.textContent = 'Folio.';
+              target.parentNode?.insertBefore(fallback, target);
+            }}
+          />
         </div>
         <button 
           onClick={handleNewSession} 
-          className="px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 flex items-center gap-1 transition-colors"
+          className="p-3 rounded-md bg-primary text-white hover:bg-primary/90 transition-colors flex items-center justify-center"
+          title="New Session"
         >
-          <FaPlus /> New Session
+          <FaRegComment className="text-lg" />
         </button>
       </div>
 
