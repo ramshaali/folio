@@ -55,8 +55,13 @@ async def generate_article_stream(req: GenerateRequest):
         ):
             if event.content and event.content.parts and any(p.text for p in event.content.parts):
                 text_output = " ".join([p.text for p in event.content.parts if p.text])
+                agent_name = getattr(event, "author", None) or "writer_agent"
+                # Map root agent to writer agent for consistency
+                if agent_name == "content_creator_root_agent":
+                    agent_name = "writer_agent"
+                
                 chunk = {
-                    "agent_name": event.author,
+                    "agent_name": agent_name,
                     "text": text_output
                 }
                 yield json.dumps(chunk) + "\n"  # newline-separated JSON chunks
