@@ -1,17 +1,15 @@
 import React from "react";
 import ReactMarkdown from 'react-markdown';
-import { FaFileAlt, FaPenNib, FaArrowLeft } from "react-icons/fa";
+import { FaFileAlt, FaPenNib } from "react-icons/fa";
 
 interface ArticlePanelProps {
   articleContent: string | null;
   isMobile?: boolean;
-  onSwitchToChat?: () => void;
 }
 
 export const ArticlePanel: React.FC<ArticlePanelProps> = ({
   articleContent,
   isMobile = false,
-  onSwitchToChat
 }) => {
   const getArticleTitleAndContent = (content: string) => {
     const lines = content.split('\n');

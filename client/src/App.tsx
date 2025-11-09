@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ChatPanel } from "./components/Chat/ChatPanel";
 import { ArticlePanel } from "./components/ArticlePanel";
-import { FaComments, FaFileAlt, FaExchangeAlt } from "react-icons/fa";
+import { FaExchangeAlt } from "react-icons/fa";
 
 const App: React.FC = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -110,7 +110,6 @@ const App: React.FC = () => {
         <ArticlePanel
           articleContent={currentArticle}
           isMobile={isMobile}
-          onSwitchToChat={() => setActiveView("chat")}
         />
       </div>
 

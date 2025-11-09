@@ -11,14 +11,6 @@ interface Message {
   type?: "normal" | "text" | "question"; // Added type for different message styles
 }
 
-interface AgentStep {
-  agent_name: string;
-  article?: string;
-  text?: string;
-  question?: string;
-  status?: string;
-}
-
 interface ChatPanelProps {
   sessionId: string | null;
   userId: string | null;
@@ -44,7 +36,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<{ name: string, text: string } | null>(null);
-  const [lastNonWriterResponse, setLastNonWriterResponse] = useState<{ content: string, type: "normal" | "text" | "question" }>({ content: "", type: "normal" });
+  const [, setLastNonWriterResponse] = useState<{ content: string, type: "normal" | "text" | "question" }>({ content: "", type: "normal" });
 
   // Load chat history from localStorage if session exists
   useEffect(() => {
@@ -69,31 +61,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     }
   }, [chatHistory, sessionId]);
 
-  const handleStartNewSession = async () => {
-    try {
-      const res = await startNewSession();
-      if (res.status === 200) {
-        setSessionId(res.data.session_id);
-        setUserId(res.data.user_id);
-        setChatHistory([]);
-        setCurrentAgent(null);
-        setLastNonWriterResponse({ content: "", type: "normal" });
-        setCurrentArticle(null);
-
-        // Clear previous session's chat history
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('folio_chatHistory_')) {
-            localStorage.removeItem(key);
-          }
-        });
-      } else {
-        alert("Failed to start new session.");
-      }
-    } catch (error) {
-      console.error('Error starting new session:', error);
-      alert("Failed to start new session.");
-    }
-  };
 
   const handleSend = async () => {
     if (!input.trim() || isStreaming) return;
@@ -219,7 +186,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           currentAgent={currentAgent}
           isStreaming={isStreaming}
           isMobile={isMobile}
-          sessionId={sessionId}
         />
 
         <InputArea

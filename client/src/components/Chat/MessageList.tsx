@@ -15,7 +15,6 @@ interface MessageListProps {
     currentAgent: { name: string; text: string } | null;
     isStreaming: boolean;
     isMobile?: boolean;
-    sessionId: string | null;
 }
 
 export const MessageList: React.FC<MessageListProps> = ({
@@ -23,7 +22,6 @@ export const MessageList: React.FC<MessageListProps> = ({
     currentAgent,
     isStreaming,
     isMobile = false,
-    sessionId,
 }) => {
     const showWelcomeMessage = messages.length === 0 && !isStreaming;
     const messagesEndRef = useRef<HTMLDivElement>(null);

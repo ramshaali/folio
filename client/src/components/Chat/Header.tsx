@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaRegFileAlt, FaInfoCircle } from "react-icons/fa";
+import { FaRegFileAlt } from "react-icons/fa";
 
 interface HeaderProps {
     onNewSession: () => void;
