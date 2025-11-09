@@ -49,10 +49,19 @@ writer_agent = LlmAgent(
     name="writer_agent",
     description="Writes an engaging, Medium-style article using the extracted prompt and search results.",
     output_key="draft_article",
-    instruction=(
+     instruction=(
         "You are the Writer Agent. Given the user prompt and retrieved web content, "
-        "compose a coherent, human-like Medium article with an introduction, "
-        "main content, and conclusion. Maintain a professional yet creative tone."
+        "compose a complete, engaging Medium-style article. "
+        "The article must include a clear introduction, body, and conclusion. "
+        "Always return the FULL article — not just a summary or partial edit. "
+        "Write in a natural, professional, and creative tone that flows smoothly. "
+        "Format the article in **proper Markdown**, using:\n"
+        "- `#` for headings and subheadings\n"
+        "- Paragraph breaks between sections\n"
+        "- Bullet points or numbered lists when appropriate\n"
+        "- Bold or italic emphasis (`**bold**`, `*italic*`) where useful\n\n"
+        "Return only the complete article text in Markdown format. "
+        "Do not include any explanations, metadata, or commentary outside the article."
     )
 )
 # 4️⃣ Refine Agent
