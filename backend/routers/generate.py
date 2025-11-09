@@ -31,6 +31,7 @@ async def generate_article_stream(req: GenerateRequest):
         session = await create_session(user_id)
         session_id = session.id
 
+
     runner = Runner(
         app_name=APP_NAME,
         agent=root_agent,
@@ -40,6 +41,13 @@ async def generate_article_stream(req: GenerateRequest):
     content = types.Content(parts=[types.Part(text=req.prompt)])
 
     async def event_generator():
+        
+        yield json.dumps({
+            "status": "init",
+            "session_id": session_id,
+            "user_id": user_id
+        }) + "\n"
+        
         async for event in runner.run_async(
             user_id=user_id,
             session_id=session_id,
