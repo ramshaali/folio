@@ -8,11 +8,14 @@ interface Message {
   role: "user" | "ai";
   content: string;
   timestamp: string;
+  type?: "normal" | "text" | "question"; // Added type for different message styles
 }
 
 interface AgentStep {
   agent_name: string;
-  text: string;
+  article?: string;
+  text?: string;
+  question?: string;
   status?: string;
 }
 
@@ -41,7 +44,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<{ name: string, text: string } | null>(null);
-  const [lastNonWriterResponse, setLastNonWriterResponse] = useState<string>("");
+  const [lastNonWriterResponse, setLastNonWriterResponse] = useState<{ content: string, type: "normal" | "text" | "question" }>({ content: "", type: "normal" });
 
   // Load chat history from localStorage if session exists
   useEffect(() => {
@@ -74,7 +77,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         setUserId(res.data.user_id);
         setChatHistory([]);
         setCurrentAgent(null);
-        setLastNonWriterResponse("");
+        setLastNonWriterResponse({ content: "", type: "normal" });
         setCurrentArticle(null);
 
         // Clear previous session's chat history
@@ -130,10 +133,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     setInput("");
     setIsStreaming(true);
     setCurrentAgent(null);
-    setLastNonWriterResponse("");
+    setLastNonWriterResponse({ content: "", type: "normal" });
 
     let finalArticleContent = "";
-    let lastAgentBeforeDone = "";
+    let lastAgentBeforeDone: { content: string, type: "normal" | "text" | "question" } = { content: "", type: "normal" };
 
     try {
       const generator = streamAgentOutputs(input, currentSessionId, currentUserId);
@@ -143,40 +146,47 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           break;
         }
 
-        setCurrentAgent({
-          name: chunk.agent_name,
-          text: chunk.text
-        });
-
-        if (chunk.agent_name !== "writer_agent") {
-          setLastNonWriterResponse(chunk.text);
-          lastAgentBeforeDone = chunk.text;
-        }
-
-        if (chunk.agent_name === "writer_agent") {
-          finalArticleContent = chunk.text;
-          setCurrentArticle(chunk.text);
+        // Handle different output keys
+        if (chunk.article) {
+          // Article content - send to article panel
+          finalArticleContent = chunk.article;
+          setCurrentArticle(chunk.article);
 
           // Auto-switch to article on mobile when article is ready
           if (isMobile && onSwitchToArticle) {
             setTimeout(() => onSwitchToArticle(), 500);
           }
+        } else if (chunk.text || chunk.question) {
+          // Text or question content - show in thinking bubble
+          const content = chunk.text || chunk.question;
+          const type = chunk.text ? "text" : "question";
+
+          setCurrentAgent({
+            name: chunk.agent_name,
+            text: content
+          });
+
+          if (chunk.agent_name !== "writer_agent") {
+            setLastNonWriterResponse({ content, type });
+            lastAgentBeforeDone = { content, type };
+          }
         }
       }
 
+      // After streaming completes, add final message to chat history
       if (finalArticleContent) {
         const completionMessage: Message = {
           role: "ai",
-          content: `**Article completed**\n\nYour article is ready in the preview panel.${isMobile ? " Swipe or use the toggle to view it." : ""
-            }`,
+          content: `**Article completed**\n\nYour article is ready in the preview panel.${isMobile ? " Swipe or use the toggle to view it." : ""}`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
         setChatHistory(prev => [...prev, completionMessage]);
-      } else if (lastAgentBeforeDone) {
+      } else if (lastAgentBeforeDone.content) {
         const agentMessage: Message = {
           role: "ai",
-          content: lastAgentBeforeDone,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          content: lastAgentBeforeDone.content,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          type: lastAgentBeforeDone.type
         };
         setChatHistory(prev => [...prev, agentMessage]);
       }

@@ -1,11 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { ThinkingBubble } from '../ThinkingBubble';
+import { FaExclamationTriangle } from "react-icons/fa";
 
 interface Message {
     role: "user" | "ai";
     content: string;
     timestamp: string;
+    type?: "normal" | "text" | "question";
 }
 
 interface MessageListProps {
@@ -30,13 +32,26 @@ export const MessageList: React.FC<MessageListProps> = ({
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, currentAgent]);
 
-    const renderMessageContent = (content: string, role: "user" | "ai") => {
+    const renderMessageContent = (content: string, role: "user" | "ai", type?: "normal" | "text" | "question") => {
         if (role === "ai") {
-            return (
-                <div className="prose prose-sm max-w-none font-lora text-charcoal leading-relaxed">
-                    <ReactMarkdown>{content}</ReactMarkdown>
-                </div>
-            );
+            if (type === "text") {
+                // Warning block for text type
+                return (
+                    <div className="bg-error/10 border border-error text-error rounded-lg p-3 flex items-start gap-3 font-lora leading-relaxed">
+                        <FaExclamationTriangle className="flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                            <ReactMarkdown>{content}</ReactMarkdown>
+                        </div>
+                    </div>
+                );
+            } else {
+                // Normal markdown for question and normal types
+                return (
+                    <div className="prose prose-sm max-w-none font-lora text-charcoal leading-relaxed">
+                        <ReactMarkdown>{content}</ReactMarkdown>
+                    </div>
+                );
+            }
         }
         return <div className="whitespace-pre-wrap font-inter text-charcoal leading-relaxed">{content}</div>;
     };
@@ -97,7 +112,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                             ? "bg-gold/10 border-l-2 lg:border-l-4 border-gold rounded-tl-none"
                             : "bg-white border-l-2 lg:border-l-4 border-charcoal rounded-tl-none shadow-sm"
                         }`}>
-                        {renderMessageContent(msg.content, msg.role)}
+                        {renderMessageContent(msg.content, msg.role, msg.type)}
                         <div className="text-xs text-warm-gray mt-3 font-inter">
                             {msg.timestamp}
                         </div>
