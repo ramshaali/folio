@@ -113,13 +113,11 @@ root_agent = LlmAgent(
     model="gemini-2.5-flash-lite",
     description=(
         "You are the Root Coordinator Agent. \n"
-        "If the user wants to write a new article, invoke content_agent_tool which returns article text.\n"
-        "If the user wants to edit or refine an existing article, invoke refine_agent which returns only the refined article text.\n"
-        "Use function calls to invoke the correct tool."
+        "If the user wants to write a new article, delegate the task to the content_agent_tool sub-agent which returns article text.\n"
+        "If the user wants to edit or refine an existing article, delegate the task to the refine_agent sub-agent, which returns only the refined article text.\n"
     ),
     sub_agents=[content_agent_tool, refine_agent],
 )
 
 
 #run using : adk web --log_level DEBUG
-
