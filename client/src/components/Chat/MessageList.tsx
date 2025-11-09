@@ -47,7 +47,7 @@ export const MessageList: React.FC<MessageListProps> = ({
             {showWelcomeMessage && (
                 <div className="flex flex-row gap-3 lg:gap-4 animate-fade-in-up">
                     <div className={`flex-shrink-0 flex items-center justify-center rounded-full bg-charcoal text-cream ${isMobile ? 'w-7 h-7 text-xs' : 'w-8 h-8'}`}>
-                        A
+                        F
                     </div>
                     <div className={`flex-1 bg-white rounded-lg border-l-2 lg:border-l-4 border-gold shadow-sm ${isMobile ? 'p-3' : 'p-4'}`}>
                         <div className="prose prose-sm max-w-none font-lora text-charcoal">
