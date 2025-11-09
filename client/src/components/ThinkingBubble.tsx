@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { FaSearch, FaEdit, FaCog, FaPalette, FaSync } from "react-icons/fa";
 
 interface ThinkingBubbleProps {
   agentName: string;
@@ -13,7 +14,6 @@ export const ThinkingBubble: React.FC<ThinkingBubbleProps> = ({
 }) => {
   const [dots, setDots] = useState('');
 
-  // Animated dots
   useEffect(() => {
     if (!isActive) {
       setDots('');
@@ -21,10 +21,7 @@ export const ThinkingBubble: React.FC<ThinkingBubbleProps> = ({
     }
 
     const interval = setInterval(() => {
-      setDots(prev => {
-        if (prev === '...') return '';
-        return prev + '.';
-      });
+      setDots(prev => prev === '...' ? '' : prev + '.');
     }, 500);
 
     return () => clearInterval(interval);
@@ -32,36 +29,62 @@ export const ThinkingBubble: React.FC<ThinkingBubbleProps> = ({
 
   if (!isActive) return null;
 
-  const getAgentAction = (name: string): string => {
-    const actions: { [key: string]: string } = {
-      'extract_agent': 'Analyzing your request and extracting key elements',
-      'websearch_agent': 'Searching the web for relevant information',
-      'writer_agent': 'Crafting engaging content based on research',
-      'refine_agent': 'Polishing and refining the article',
-      'image_gen_agent': 'Generating visual assets',
-      'content_creator_root_agent': 'Coordinating the editorial team'
+  const getAgentConfig = (name: string) => {
+    const config: { [key: string]: { action: string; icon: React.ReactNode; color: string } } = {
+      'extract_agent': {
+        action: 'Analyzing request and extracting key elements',
+        icon: <FaCog className="text-sm" />,
+        color: 'text-warm-gray'
+      },
+      'websearch_agent': {
+        action: 'Researching and gathering information',
+        icon: <FaSearch className="text-sm" />,
+        color: 'text-gold'
+      },
+      'writer_agent': {
+        action: 'Composing article content',
+        icon: <FaEdit className="text-sm" />,
+        color: 'text-charcoal'
+      },
+      'refine_agent': {
+        action: 'Refining and polishing content',
+        icon: <FaPalette className="text-sm" />,
+        color: 'text-burgundy'
+      },
+      'image_gen_agent': {
+        action: 'Preparing visual elements',
+        icon: <FaPalette className="text-sm" />,
+        color: 'text-gold'
+      },
+      'content_creator_root_agent': {
+        action: 'Orchestrating editorial workflow',
+        icon: <FaSync className="text-sm" />,
+        color: 'text-charcoal'
+      }
     };
-    return actions[name] || 'Processing';
+    return config[name] || { action: 'Processing', icon: <FaCog />, color: 'text-warm-gray' };
   };
 
-  // For extract_agent, don't show the actual text (like "google"), just show the action message
+  const { action, icon, color } = getAgentConfig(agentName);
   const shouldShowText = agentName !== 'extract_agent' && agentText && agentText !== 'undefined';
 
   return (
-    <div className="flex flex-row gap-2 animate-pulse">
-      <div className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-500 text-white">
-        ⚡
+    <div className="flex items-start gap-4 animate-fade-in-up">
+      <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-light-gray ${color}`}>
+        {icon}
       </div>
-      <div className="max-w-[70%] p-3 rounded-xl font-inter text-sm border border-gray-300 bg-gray-100">
-        <div className="text-gray-700">
-          <span className="font-semibold">{getAgentAction(agentName)}</span>
-          {shouldShowText && (
-            <>
-              : <span className="text-gray-600">{agentText}</span>
-            </>
-          )}
-          <span className="text-gray-400">{dots}</span>
+      
+      <div className="flex-1 bg-white rounded-lg p-4 border-l-4 border-gold shadow-sm">
+        <div className="flex items-center gap-2 text-charcoal font-inter text-sm">
+          <span className="font-medium">{action}</span>
+          <span className="text-warm-gray animate-pulse-subtle">{dots}</span>
         </div>
+        
+        {shouldShowText && (
+          <div className="mt-2 p-3 bg-cream rounded border border-border text-sm text-warm-gray font-lora leading-relaxed">
+            {agentText}
+          </div>
+        )}
       </div>
     </div>
   );

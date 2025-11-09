@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChatPanel } from "./components/ChatPanel";
+import { ChatPanel } from "./components/Chat/ChatPanel";
 import { ArticlePanel } from "./components/ArticlePanel";
 
 const App: React.FC = () => {
@@ -8,7 +8,7 @@ const App: React.FC = () => {
   const [currentArticle, setCurrentArticle] = useState<string | null>(null);
 
   return (
-    <div className="h-screen flex gap-4 p-4 bg-secondary">
+    <div className="h-screen flex gap-6 p-6 bg-cream">
       <div className="flex-4 flex flex-col h-full">
         <ChatPanel
           sessionId={sessionId}
