@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { generateArticle, startNewSession, streamAgentOutputs } from "../apis/article";
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaArrowUp } from "react-icons/fa";
 import { ThinkingBubble } from "./ThinkingBubble";
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   role: "user" | "ai";
@@ -36,10 +37,19 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   const [currentAgent, setCurrentAgent] = useState<{name: string, text: string} | null>(null);
   const [lastNonWriterResponse, setLastNonWriterResponse] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
   useEffect(() => { scrollToBottom(); }, [chatHistory, currentAgent]);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [input]);
 
   const handleNewSession = async () => {
     const res = await startNewSession();
@@ -56,7 +66,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   };
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isStreaming) return;
     
     const userMessage: Message = { 
       role: "user", 
@@ -105,7 +115,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         // If we have article content, show completion message in chat
         const completionMessage: Message = {
           role: "ai",
-          content: "✅ Article generation completed! Check the preview panel.",
+          content: "**Article generation completed!**\n\nYour article is now ready in the preview panel. You can continue chatting to make edits or generate new content.",
           timestamp: new Date().toLocaleTimeString()
         };
         setChatHistory(prev => [...prev, completionMessage]);
@@ -123,7 +133,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       console.error("Stream error:", error);
       const errorMessage: Message = {
         role: "ai",
-        content: "❌ Sorry, there was an error processing your request.",
+        content: "**Sorry, there was an error processing your request.**\n\nPlease try again or rephrase your request.",
         timestamp: new Date().toLocaleTimeString()
       };
       setChatHistory(prev => [...prev, errorMessage]);
@@ -133,35 +143,55 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     }
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const renderMessageContent = (content: string, role: "user" | "ai") => {
+    if (role === "ai") {
+      return (
+        <div className="prose prose-sm max-w-none">
+          <ReactMarkdown>{content}</ReactMarkdown>
+        </div>
+      );
+    }
+    return <div className="whitespace-pre-wrap">{content}</div>;
+  };
+
   return (
-    <div className="flex flex-col h-full bg-secondary rounded-md border border-accent shadow-md">
+    <div className="flex flex-col h-full bg-secondary rounded-md border border-muted shadow-md">
       {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b border-accent bg-white">
-        <div className="flex items-center gap-2 font-playfair text-accent text-2xl font-bold">
+      <div className="flex justify-between items-center p-4 border-b border-muted bg-white">
+        <div className="flex items-center gap-2 font-playfair text-muted text-2xl font-bold">
           Folio<span className="text-primary">.</span>
         </div>
         <button 
           onClick={handleNewSession} 
-          className="px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 flex items-center gap-1"
+          className="px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 flex items-center gap-1 transition-colors"
         >
           <FaPlus /> New Session
         </button>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
         {chatHistory.map((msg, idx) => (
-          <div key={idx} className={`flex ${msg.role === "user" ? "flex-row-reverse" : "flex-row"} gap-2`}>
+          <div key={idx} className={`flex ${msg.role === "user" ? "flex-row-reverse" : "flex-row"} gap-3`}>
             <div className={`w-9 h-9 flex items-center justify-center rounded-full ${
-              msg.role === "user" ? "bg-primary text-white" : "bg-accent text-white"
+              msg.role === "user" ? "bg-primary text-white" : "bg-muted text-white"
             }`}>
               {msg.role === "user" ? "You" : "AI"}
             </div>
-            <div className={`max-w-[70%] p-3 rounded-xl font-inter text-sm border ${
-              msg.role === "user" ? "border-primary/20 bg-blue-50" : "border-accent bg-white"
+            <div className={`max-w-[75%] p-4 rounded-2xl font-inter text-sm border ${
+              msg.role === "user" 
+                ? "border-primary/20 bg-blue-50 rounded-br-none" 
+                : "border-muted/20 bg-white rounded-bl-none"
             }`}>
-              {msg.content}
-              <div className="text-xs text-muted mt-1 text-right">{msg.timestamp}</div>
+              {renderMessageContent(msg.content, msg.role)}
+              <div className="text-xs text-muted mt-2 text-right">{msg.timestamp}</div>
             </div>
           </div>
         ))}
@@ -178,24 +208,43 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="sticky bottom-0 p-4 border-t border-accent bg-secondary flex gap-2">
-        <textarea
-          className="flex-1 p-2 border border-accent rounded-md font-inter text-sm"
-          placeholder="Describe your article topic..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
-          rows={3}
-          disabled={isStreaming}
-        />
-        <button 
-          onClick={handleSend} 
-          disabled={isStreaming || !input.trim()}
-          className="px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 disabled:bg-gray-400 disabled:cursor-not-allowed"
-        >
-          {isStreaming ? '⏳ Working...' : '📨 Send'}
-        </button>
+      {/* Input Area - DeepSeek Style */}
+      <div className="sticky bottom-0 p-4 border-t border-muted/50 bg-secondary">
+        <div className="relative">
+          <textarea
+            ref={textareaRef}
+            className="w-full p-4 pr-12 border border-muted/30 rounded-2xl font-inter text-sm bg-white resize-none focus:outline-none focus:border-primary/50 transition-colors"
+            placeholder="Describe your article topic..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            rows={1}
+            disabled={isStreaming}
+            style={{
+              minHeight: '70px',
+              maxHeight: '120px'
+            }}
+          />
+          <button 
+            onClick={handleSend}
+            disabled={isStreaming || !input.trim()}
+            className={`absolute right-3 bottom-3 p-2 rounded-xl transition-all duration-200 ${
+              isStreaming || !input.trim()
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-primary text-white hover:bg-primary/90 shadow-sm hover:shadow-md'
+            }`}
+            style={{
+              transform: isStreaming || !input.trim() ? 'scale(1)' : 'scale(1.05)'
+            }}
+          >
+            <FaArrowUp className={`text-sm ${isStreaming ? 'opacity-50' : ''}`} />
+          </button>
+        </div>
+        
+        {/* Helper text */}
+        <div className="text-xs text-muted text-center mt-2">
+          {isStreaming ? "Generating response... Please wait." : "Press Enter to send, Shift+Enter for new line"}
+        </div>
       </div>
     </div>
   );

@@ -11,31 +11,7 @@ export const ThinkingBubble: React.FC<ThinkingBubbleProps> = ({
   agentText, 
   isActive 
 }) => {
-  const [displayText, setDisplayText] = useState('');
   const [dots, setDots] = useState('');
-
-  // Typing animation for agent text
-  useEffect(() => {
-    if (!agentText) {
-      setDisplayText('');
-      return;
-    }
-
-    setDisplayText('');
-    let currentIndex = 0;
-    const text = agentText;
-
-    const interval = setInterval(() => {
-      if (currentIndex < text.length) {
-        setDisplayText(prev => prev + text[currentIndex]);
-        currentIndex++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 10);
-
-    return () => clearInterval(interval);
-  }, [agentText]);
 
   // Animated dots
   useEffect(() => {
@@ -58,15 +34,18 @@ export const ThinkingBubble: React.FC<ThinkingBubbleProps> = ({
 
   const getAgentAction = (name: string): string => {
     const actions: { [key: string]: string } = {
-      'extract_agent': 'Analyzing your request and extracting key elements...',
-      'websearch_agent': 'Searching the web for relevant information...',
-      'writer_agent': 'Crafting engaging content based on research...',
-      'refine_agent': 'Polishing and refining the article...',
-      'image_gen_agent': 'Generating visual assets...',
-      'content_creator_root_agent': 'Coordinating the editorial team...'
+      'extract_agent': 'Analyzing your request and extracting key elements',
+      'websearch_agent': 'Searching the web for relevant information',
+      'writer_agent': 'Crafting engaging content based on research',
+      'refine_agent': 'Polishing and refining the article',
+      'image_gen_agent': 'Generating visual assets',
+      'content_creator_root_agent': 'Coordinating the editorial team'
     };
     return actions[name] || 'Processing';
   };
+
+  // For extract_agent, don't show the actual text (like "google"), just show the action message
+  const shouldShowText = agentName !== 'extract_agent' && agentText && agentText !== 'undefined';
 
   return (
     <div className="flex flex-row gap-2 animate-pulse">
@@ -76,9 +55,9 @@ export const ThinkingBubble: React.FC<ThinkingBubbleProps> = ({
       <div className="max-w-[70%] p-3 rounded-xl font-inter text-sm border border-gray-300 bg-gray-100">
         <div className="text-gray-700">
           <span className="font-semibold">{getAgentAction(agentName)}</span>
-          {displayText && (
+          {shouldShowText && (
             <>
-              : <span className="text-gray-600">{displayText}</span>
+              : <span className="text-gray-600">{agentText}</span>
             </>
           )}
           <span className="text-gray-400">{dots}</span>
