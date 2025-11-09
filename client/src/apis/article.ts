@@ -42,7 +42,7 @@ export const streamAgentOutputs = async function* (prompt: string, sessionId: st
     while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        
+
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
         buffer = lines.pop() || "";

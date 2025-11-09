@@ -40,7 +40,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [currentAgent, setCurrentAgent] = useState<{name: string, text: string} | null>(null);
+  const [currentAgent, setCurrentAgent] = useState<{ name: string, text: string } | null>(null);
   const [lastNonWriterResponse, setLastNonWriterResponse] = useState<string>("");
 
   // Load chat history from localStorage if session exists
@@ -76,7 +76,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         setCurrentAgent(null);
         setLastNonWriterResponse("");
         setCurrentArticle(null);
-        
+
         // Clear previous session's chat history
         Object.keys(localStorage).forEach(key => {
           if (key.startsWith('folio_chatHistory_')) {
@@ -94,7 +94,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
   const handleSend = async () => {
     if (!input.trim() || isStreaming) return;
-    
+
     // If no session exists, create one first
     let currentSessionId = sessionId;
     let currentUserId = userId;
@@ -117,10 +117,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         return;
       }
     }
-    
-    const userMessage: Message = { 
-      role: "user", 
-      content: input, 
+
+    const userMessage: Message = {
+      role: "user",
+      content: input,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     setChatHistory((prev) => [...prev, userMessage]);
@@ -134,7 +134,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
     try {
       const generator = streamAgentOutputs(input, currentSessionId, currentUserId);
-      
+
       for await (const chunk of generator) {
         if (chunk.status === "done") {
           break;
@@ -153,7 +153,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         if (chunk.agent_name === "writer_agent") {
           finalArticleContent = chunk.text;
           setCurrentArticle(chunk.text);
-          
+
           // Auto-switch to article on mobile when article is ready
           if (isMobile && onSwitchToArticle) {
             setTimeout(() => onSwitchToArticle(), 500);
@@ -164,9 +164,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       if (finalArticleContent) {
         const completionMessage: Message = {
           role: "ai",
-          content: `**Article completed**\n\nYour article is ready in the preview panel.${
-            isMobile ? " Swipe or use the toggle to view it." : ""
-          }`,
+          content: `**Article completed**\n\nYour article is ready in the preview panel.${isMobile ? " Swipe or use the toggle to view it." : ""
+            }`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
         setChatHistory(prev => [...prev, completionMessage]);
@@ -195,20 +194,20 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-cream rounded-lg shadow-sm border border-border">
-      <Header 
-        onNewSession={onNewSession} 
+      <Header
+        onNewSession={onNewSession}
         isMobile={isMobile}
         hasActiveSession={!!sessionId}
       />
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
-        <MessageList 
-          messages={chatHistory} 
+        <MessageList
+          messages={chatHistory}
           currentAgent={currentAgent}
           isStreaming={isStreaming}
           isMobile={isMobile}
         />
-        
+
         <InputArea
           input={input}
           setInput={setInput}

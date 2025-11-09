@@ -14,7 +14,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const savedSessionId = localStorage.getItem('folio_sessionId');
     const savedUserId = localStorage.getItem('folio_userId');
-    
+
     if (savedSessionId && savedUserId) {
       setSessionId(savedSessionId);
       setUserId(savedUserId);
@@ -56,49 +56,16 @@ const App: React.FC = () => {
     setUserId(null);
     setCurrentArticle(null);
     setActiveView("chat");
-    
+
     localStorage.removeItem('folio_sessionId');
     localStorage.removeItem('folio_userId');
   };
 
   return (
     <div className="h-screen flex flex-col lg:flex-row gap-4 lg:gap-6 p-4 lg:p-6 bg-cream">
-      {/* Mobile Header with Toggle */}
-      {/* {isMobile && (
-        <div className="flex items-center justify-between mb-4 lg:hidden">
-          <h1 className="font-playfair text-charcoal text-xl font-bold">Folio</h1>
-          <div className="flex items-center gap-2 bg-white rounded-lg p-1 border border-border">
-            <button
-              onClick={() => setActiveView("chat")}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200 ${
-                activeView === "chat" 
-                  ? "bg-gold text-cream shadow-sm" 
-                  : "text-warm-gray hover:text-charcoal"
-              }`}
-            >
-              <FaComments className="text-sm" />
-              <span className="text-sm font-medium">Chat</span>
-            </button>
-            <button
-              onClick={() => setActiveView("article")}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200 ${
-                activeView === "article" 
-                  ? "bg-gold text-cream shadow-sm" 
-                  : "text-warm-gray hover:text-charcoal"
-              }`}
-              disabled={!currentArticle}
-            >
-              <FaFileAlt className="text-sm" />
-              <span className="text-sm font-medium">Article</span>
-            </button>
-          </div>
-        </div>
-      )} */}
-
       {/* Chat Panel */}
-      <div className={`flex-4 flex flex-col h-full ${
-        isMobile ? (activeView === "chat" ? "flex" : "hidden") : "flex"
-      }`}>
+      <div className={`flex-4 flex flex-col h-full ${isMobile ? (activeView === "chat" ? "flex" : "hidden") : "flex"
+        }`}>
         <ChatPanel
           sessionId={sessionId}
           userId={userId}
@@ -112,11 +79,10 @@ const App: React.FC = () => {
       </div>
 
       {/* Article Panel */}
-      <div className={`flex-6 flex flex-col h-full ${
-        isMobile ? (activeView === "article" ? "flex" : "hidden") : "flex"
-      }`}>
-        <ArticlePanel 
-          articleContent={currentArticle} 
+      <div className={`flex-6 flex flex-col h-full ${isMobile ? (activeView === "article" ? "flex" : "hidden") : "flex"
+        }`}>
+        <ArticlePanel
+          articleContent={currentArticle}
           isMobile={isMobile}
           onSwitchToChat={() => setActiveView("chat")}
         />

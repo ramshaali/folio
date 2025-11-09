@@ -8,16 +8,16 @@ interface ArticlePanelProps {
   onSwitchToChat?: () => void;
 }
 
-export const ArticlePanel: React.FC<ArticlePanelProps> = ({ 
-  articleContent, 
+export const ArticlePanel: React.FC<ArticlePanelProps> = ({
+  articleContent,
   isMobile = false,
-  onSwitchToChat 
+  onSwitchToChat
 }) => {
   const getArticleTitleAndContent = (content: string) => {
     const lines = content.split('\n');
     const firstLine = lines[0]?.trim() || '';
     const remainingContent = lines.slice(1).join('\n').trim();
-    
+
     return { title: firstLine, content: remainingContent };
   };
 
@@ -41,20 +41,20 @@ export const ArticlePanel: React.FC<ArticlePanelProps> = ({
                 </div>
               </div>
             )}
-            
+
             {/* Content Section */}
             <div className="prose prose-sm lg:prose-lg max-w-none font-lora text-charcoal leading-relaxed">
               <ReactMarkdown
                 components={{
-                  h1: ({node, ...props}) => <h1 className="text-xl lg:text-3xl font-bold text-charcoal mt-8 mb-4 lg:mt-12 lg:mb-6 font-playfair border-b border-border pb-2" {...props} />,
-                  h2: ({node, ...props}) => <h2 className="text-lg lg:text-2xl font-bold text-charcoal mt-6 mb-3 lg:mt-10 lg:mb-4 font-playfair" {...props} />,
-                  h3: ({node, ...props}) => <h3 className="text-base lg:text-xl font-bold text-charcoal mt-4 mb-2 lg:mt-8 lg:mb-3 font-playfair" {...props} />,
-                  p: ({node, ...props}) => <p className="mb-4 lg:mb-6 leading-7 text-charcoal/90" {...props} />,
-                  ul: ({node, ...props}) => <ul className="mb-4 lg:mb-6 pl-4 lg:pl-6 list-disc space-y-2" {...props} />,
-                  ol: ({node, ...props}) => <ol className="mb-4 lg:mb-6 pl-4 lg:pl-6 list-decimal space-y-2" {...props} />,
-                  li: ({node, ...props}) => <li className="leading-6 lg:leading-7" {...props} />,
-                  blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-gold pl-4 lg:pl-6 italic text-warm-gray my-4 lg:my-6 py-2 bg-cream/50" {...props} />,
-                  strong: ({node, ...props}) => <strong className="font-bold text-charcoal" {...props} />,
+                  h1: ({ node, ...props }) => <h1 className="text-xl lg:text-3xl font-bold text-charcoal mt-8 mb-4 lg:mt-12 lg:mb-6 font-playfair border-b border-border pb-2" {...props} />,
+                  h2: ({ node, ...props }) => <h2 className="text-lg lg:text-2xl font-bold text-charcoal mt-6 mb-3 lg:mt-10 lg:mb-4 font-playfair" {...props} />,
+                  h3: ({ node, ...props }) => <h3 className="text-base lg:text-xl font-bold text-charcoal mt-4 mb-2 lg:mt-8 lg:mb-3 font-playfair" {...props} />,
+                  p: ({ node, ...props }) => <p className="mb-4 lg:mb-6 leading-7 text-charcoal/90" {...props} />,
+                  ul: ({ node, ...props }) => <ul className="mb-4 lg:mb-6 pl-4 lg:pl-6 list-disc space-y-2" {...props} />,
+                  ol: ({ node, ...props }) => <ol className="mb-4 lg:mb-6 pl-4 lg:pl-6 list-decimal space-y-2" {...props} />,
+                  li: ({ node, ...props }) => <li className="leading-6 lg:leading-7" {...props} />,
+                  blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-gold pl-4 lg:pl-6 italic text-warm-gray my-4 lg:my-6 py-2 bg-cream/50" {...props} />,
+                  strong: ({ node, ...props }) => <strong className="font-bold text-charcoal" {...props} />,
                 }}
               >
                 {content || articleContent}
