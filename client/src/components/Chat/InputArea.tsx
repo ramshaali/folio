@@ -7,6 +7,7 @@ interface InputAreaProps {
   isStreaming: boolean;
   onSend: () => void;
   isMobile?: boolean;
+  hasActiveSession?: boolean;
 }
 
 export const InputArea: React.FC<InputAreaProps> = ({
@@ -15,6 +16,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
   isStreaming,
   onSend,
   isMobile = false,
+  hasActiveSession = false,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -45,7 +47,11 @@ export const InputArea: React.FC<InputAreaProps> = ({
               ? 'p-3 pr-12 text-sm min-h-[50px] max-h-[100px]' 
               : 'p-4 pr-14 text-base lg:text-sm min-h-[60px] max-h-[120px]'
           }`}
-          placeholder={isMobile ? "Describe your article topic..." : "Describe your article topic or provide specific instructions..."}
+          placeholder={
+            hasActiveSession 
+              ? "Continue your conversation..." 
+              : "Describe your article topic..."
+          }
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={handleKeyPress}
@@ -72,8 +78,8 @@ export const InputArea: React.FC<InputAreaProps> = ({
       </div>
       
       {/* Helper Text */}
-      <div className={`text-warm-gray text-center font-inter ${
-        isMobile ? 'text-xs mt-2' : 'text-xs lg:text-sm mt-3'
+      <div className={`text-warm-gray text-center font-inter text-xs ${
+        isMobile ? 'mt-2' : ' mt-3'
       }`}>
         {isStreaming 
           ? "Editorial team is working..." 

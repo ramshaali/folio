@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
-import { FaRegFileAlt } from "react-icons/fa";
+import { FaRegFileAlt, FaInfoCircle } from "react-icons/fa";
 
 interface HeaderProps {
   onNewSession: () => void;
   isMobile?: boolean;
+  hasActiveSession?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onNewSession, isMobile = false }) => {
+export const Header: React.FC<HeaderProps> = ({ 
+  onNewSession, 
+  isMobile = false,
+  hasActiveSession = false 
+}) => {
   const [logoError, setLogoError] = useState(false);
 
   return (
@@ -34,15 +39,25 @@ export const Header: React.FC<HeaderProps> = ({ onNewSession, isMobile = false }
             </div>
           </>
         )}
+        
+        {/* Session Status Indicator */}
+        {hasActiveSession && (
+          <div className="flex items-center gap-1 bg-light-gray rounded-full px-2 py-1">
+            <div className="w-2 h-2 bg-gold rounded-full animate-pulse"></div>
+            <span className="text-xs text-warm-gray font-inter">Active</span>
+          </div>
+        )}
       </div>
       
-      <button 
-        onClick={onNewSession}
-        className="p-2 lg:p-3 rounded-lg bg-gold text-cream hover:bg-gold/90 shadow-sm transform hover:scale-105 transition-all duration-200"
-        title="New Session"
-      >
-        <FaRegFileAlt className="text-base lg:text-lg" />
-      </button>
+      <div className="flex items-center gap-2">
+        <button 
+          onClick={onNewSession}
+          className="p-2 lg:p-3 rounded-lg bg-gold text-cream hover:bg-gold/90 shadow-sm transform hover:scale-105 transition-all duration-200"
+          title="New Session"
+        >
+          <FaRegFileAlt className="text-base lg:text-lg" />
+        </button>
+      </div>
     </div>
   );
 };

@@ -10,10 +10,32 @@ const App: React.FC = () => {
   const [activeView, setActiveView] = useState<"chat" | "article">("chat");
   const [isMobile, setIsMobile] = useState(false);
 
+  // Load session from localStorage on component mount
+  useEffect(() => {
+    const savedSessionId = localStorage.getItem('folio_sessionId');
+    const savedUserId = localStorage.getItem('folio_userId');
+    
+    if (savedSessionId && savedUserId) {
+      setSessionId(savedSessionId);
+      setUserId(savedUserId);
+    }
+  }, []);
+
+  // Save session to localStorage whenever it changes
+  useEffect(() => {
+    if (sessionId && userId) {
+      localStorage.setItem('folio_sessionId', sessionId);
+      localStorage.setItem('folio_userId', userId);
+    } else {
+      localStorage.removeItem('folio_sessionId');
+      localStorage.removeItem('folio_userId');
+    }
+  }, [sessionId, userId]);
+
   // Check if mobile on mount and resize
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024); // lg breakpoint
+      setIsMobile(window.innerWidth < 1024);
     };
 
     checkMobile();
@@ -27,6 +49,17 @@ const App: React.FC = () => {
       setActiveView("article");
     }
   }, [currentArticle, isMobile]);
+
+  const handleNewSession = () => {
+    // Clear both state and localStorage
+    setSessionId(null);
+    setUserId(null);
+    setCurrentArticle(null);
+    setActiveView("chat");
+    
+    localStorage.removeItem('folio_sessionId');
+    localStorage.removeItem('folio_userId');
+  };
 
   return (
     <div className="h-screen flex flex-col lg:flex-row gap-4 lg:gap-6 p-4 lg:p-6 bg-cream">
@@ -74,6 +107,7 @@ const App: React.FC = () => {
           setCurrentArticle={setCurrentArticle}
           isMobile={isMobile}
           onSwitchToArticle={() => setActiveView("article")}
+          onNewSession={handleNewSession}
         />
       </div>
 

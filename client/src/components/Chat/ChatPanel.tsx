@@ -1,9 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { startNewSession, streamAgentOutputs } from "../../apis/article";
 import { Header } from "./Header";
 import { MessageList } from "./MessageList";
 import { InputArea } from "./InputArea";
-import { ThinkingBubble } from "../ThinkingBubble";
 
 interface Message {
   role: "user" | "ai";
@@ -25,6 +24,7 @@ interface ChatPanelProps {
   setCurrentArticle: (article: any) => void;
   isMobile?: boolean;
   onSwitchToArticle?: () => void;
+  onNewSession: () => void;
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({
@@ -35,6 +35,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   setCurrentArticle,
   isMobile = false,
   onSwitchToArticle,
+  onNewSession,
 }) => {
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -42,22 +43,80 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   const [currentAgent, setCurrentAgent] = useState<{name: string, text: string} | null>(null);
   const [lastNonWriterResponse, setLastNonWriterResponse] = useState<string>("");
 
-  const handleNewSession = async () => {
-    const res = await startNewSession();
-    if (res.status === 200) {
-      setSessionId(res.data.session_id);
-      setUserId(res.data.user_id);
-      setChatHistory([]);
-      setCurrentAgent(null);
-      setLastNonWriterResponse("");
-      setCurrentArticle(null);
+  // Load chat history from localStorage if session exists
+  useEffect(() => {
+    if (sessionId) {
+      const savedChatHistory = localStorage.getItem(`folio_chatHistory_${sessionId}`);
+      if (savedChatHistory) {
+        try {
+          setChatHistory(JSON.parse(savedChatHistory));
+        } catch (error) {
+          console.error('Error loading chat history:', error);
+        }
+      }
     } else {
+      setChatHistory([]);
+    }
+  }, [sessionId]);
+
+  // Save chat history to localStorage whenever it changes
+  useEffect(() => {
+    if (sessionId && chatHistory.length > 0) {
+      localStorage.setItem(`folio_chatHistory_${sessionId}`, JSON.stringify(chatHistory));
+    }
+  }, [chatHistory, sessionId]);
+
+  const handleStartNewSession = async () => {
+    try {
+      const res = await startNewSession();
+      if (res.status === 200) {
+        setSessionId(res.data.session_id);
+        setUserId(res.data.user_id);
+        setChatHistory([]);
+        setCurrentAgent(null);
+        setLastNonWriterResponse("");
+        setCurrentArticle(null);
+        
+        // Clear previous session's chat history
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('folio_chatHistory_')) {
+            localStorage.removeItem(key);
+          }
+        });
+      } else {
+        alert("Failed to start new session.");
+      }
+    } catch (error) {
+      console.error('Error starting new session:', error);
       alert("Failed to start new session.");
     }
   };
 
   const handleSend = async () => {
     if (!input.trim() || isStreaming) return;
+    
+    // If no session exists, create one first
+    let currentSessionId = sessionId;
+    let currentUserId = userId;
+
+    if (!currentSessionId || !currentUserId) {
+      try {
+        const res = await startNewSession();
+        if (res.status === 200) {
+          currentSessionId = res.data.session_id;
+          currentUserId = res.data.user_id;
+          setSessionId(currentSessionId as string);
+          setUserId(currentUserId as string);
+        } else {
+          alert("Failed to start session.");
+          return;
+        }
+      } catch (error) {
+        console.error('Error starting session:', error);
+        alert("Failed to start session.");
+        return;
+      }
+    }
     
     const userMessage: Message = { 
       role: "user", 
@@ -74,7 +133,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     let lastAgentBeforeDone = "";
 
     try {
-      const generator = streamAgentOutputs(input, sessionId, userId);
+      const generator = streamAgentOutputs(input, currentSessionId, currentUserId);
       
       for await (const chunk of generator) {
         if (chunk.status === "done") {
@@ -136,7 +195,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-cream rounded-lg shadow-sm border border-border">
-      <Header onNewSession={handleNewSession} isMobile={isMobile} />
+      <Header 
+        onNewSession={onNewSession} 
+        isMobile={isMobile}
+        hasActiveSession={!!sessionId}
+      />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <MessageList 
@@ -152,6 +215,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           isStreaming={isStreaming}
           onSend={handleSend}
           isMobile={isMobile}
+          hasActiveSession={!!sessionId}
         />
       </div>
     </div>
