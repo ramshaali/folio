@@ -35,7 +35,7 @@ export const ArticlePanel: React.FC<ArticlePanelProps> = ({
           <div className="p-4 lg:p-8 max-w-4xl mx-auto">
             {/* Title Section */}
             {title && (
-              <div className="mb-6 lg:mb-12 pb-6 lg:pb-8 border-b border-border">
+              <div className="mb-6 mr-4 lg:mb-12 pb-6 lg:pb-8 border-b border-border">
                 <h1 className="text-2xl lg:text-4xl font-bold text-charcoal font-playfair leading-tight tracking-tight mb-4">
                   {title.replace(/^#+\s*/, '')}
                 </h1>
