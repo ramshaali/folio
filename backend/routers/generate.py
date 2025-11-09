@@ -4,6 +4,7 @@ from google.adk.runners import Runner
 from google.genai import types
 from core.session_manager import session_service, create_session
 from my_agent.agent import root_agent
+from my_agent.utils import analyze_output_with_gemini
 from fastapi.responses import StreamingResponse
 import uuid
 import asyncio
@@ -57,14 +58,19 @@ async def generate_article_stream(req: GenerateRequest):
                 text_output = " ".join([p.text for p in event.content.parts if p.text])
                 agent_name = getattr(event, "author", None) or "writer_agent"
                 # Map root agent to writer agent for consistency
-                if agent_name == "content_creator_root_agent":
-                    agent_name = "writer_agent"
+
                 
-                chunk = {
-                    "agent_name": agent_name,
-                    "text": text_output
-                }
-                yield json.dumps(chunk) + "\n"  # newline-separated JSON chunks
+                if agent_name in {"writer_agent", "refine_agent", "content_creator_root_agent"}:
+                    structured_chunk = await analyze_output_with_gemini(agent_name, text_output)
+                else:
+                    structured_chunk = {
+                        "agent_name": agent_name,
+                        "text": text_output
+                    }
+
+                print("structured chunk: ", structured_chunk)
+                yield json.dumps(structured_chunk) + "\n"
+               
 
         # send a final signal that streaming is done
         yield json.dumps({"status": "done"}) + "\n"
