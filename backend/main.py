@@ -11,14 +11,14 @@ app = FastAPI()
 # CORS CONFIGURATION
 # -----------------------
 origins = [
-    "https://folio-178508032061.us-central1.run.app/",  
+    "https://folio-178508032061.us-central1.run.app",  
     "http://localhost:5173", 
     "http://localhost:8080",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
