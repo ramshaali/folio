@@ -6,7 +6,12 @@ import logging
 from dotenv import load_dotenv
 import base64
 import json
+from pydantic import ValidationError
+from my_agent.schemas import AgentOutput
 load_dotenv()
+
+
+client = genai.Client()
 
 def google_search_custom(query: str) -> str:
     """
@@ -88,6 +93,61 @@ def generate_image_from_article(article_text: str) -> str:
     except Exception as e:
         logging.error(f"Image generation failed: {e}")
         return json.dumps({"error": str(e), "article_text": article_text})
+    
+    
 
+
+async def analyze_output_with_gemini(agent_name: str, text_output: str) -> dict:
+    """
+    Use Gemini to classify text output into structured JSON.
+    - If it's a question, populate 'question' and leave 'article' empty.
+    - If it's an article, populate 'article' and leave 'question' empty.
+    """
+    prompt = f"""
+You are given a text output from an agent named '{agent_name}'.
+Classify it as either an 'article' or a 'question' (clarification request).
+
+Return ONLY valid JSON in the following format:
+
+{{
+  "agent_name": "{agent_name}",
+  "article": "<full article text here, leave empty if it's a question>",
+  "question": "<clarifying question here, leave empty if it's an article>"
+}}
+
+Text to classify:
+\"\"\"{text_output}\"\"\"
+"""
+
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+        config={
+            "response_mime_type": "application/json",
+            "response_json_schema": AgentOutput.model_json_schema(),
+        },
+    )
+
+    try:
+        # Validate Gemini response directly against Pydantic schema
+        result = AgentOutput.model_validate_json(response.text)
+        return result.dict()
+    except ValidationError as e:
+        # Fallback if Gemini output doesn't match schema
+        return {
+            "agent_name": agent_name,
+            "article": "",
+            "question": "",
+            "text": text_output,
+            "error": str(e),
+        }
+    except json.JSONDecodeError:
+        # Handle invalid JSON case
+        return {
+            "agent_name": agent_name,
+            "article": "",
+            "question": "",
+            "text": text_output,
+        }
 # result = generate_image_from_article("This is a test article about AI.")
 # print(result)

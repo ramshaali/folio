@@ -55,26 +55,29 @@ writer_agent = LlmAgent(
         "main content, and conclusion. Maintain a professional yet creative tone."
     )
 )
-
 # 4️⃣ Refine Agent
 refine_agent = LlmAgent(
     model="gemini-2.5-flash-lite",
     name="refine_agent",
     description=(
-        "Edits and improves the article based on the user's instructions. "
+        "Edits and improves the entire article based on the user's instructions. "
+        "Always return the complete refined article, not just the changed sections. "
         "Focus on enhancing tone, grammar, clarity, and flow. "
         "Follow any specific user requests for changes (e.g., add conclusion, make more formal). "
         "Do NOT call or transfer to other agents or functions."
     ),
     output_key="refined_article",
     instruction=(
-        "You are the Refine Agent. When invoked, improve the provided article text "
+        "You are the Refine Agent. When invoked, you will improve the provided article text "
         "by enhancing tone, grammar, clarity, and flow according to the user's instructions. "
-        "Apply any user-specified edits exactly as requested. "
+        "Apply all user-specified edits precisely as requested. "
+        "Do NOT summarize or output only the modified portion. "
+        "ALWAYS return the full article, with all sections included — even unchanged parts. "
         "Do NOT call or transfer control to other agents or functions. "
-        "Return only the fully refined article text as a plain response."
-    )
+        "Return only the complete refined article as plain text (no explanations or notes)."
+    ),
 )
+
 
 
 # 5️⃣ Image Generation Agent
