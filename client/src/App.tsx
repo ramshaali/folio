@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ChatPanel } from "./components/Chat/ChatPanel";
-import { ArticlePanel } from "./components/ArticlePanel";
+import { ArticlePanel } from "./components/Article/ArticlePanel";
 import { FaExchangeAlt } from "react-icons/fa";
 
 const App: React.FC = () => {

@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import ReactMarkdown from 'react-markdown';
-import { FaFileAlt, FaPenNib, FaShare } from "react-icons/fa";
-import { ShareOptions } from "./ShareOptions";
+import { FaFileAlt } from "react-icons/fa";
+import { ArticleActions } from "./ArticleActions";
 
 interface ArticlePanelProps {
   articleContent: string | null;
@@ -12,8 +12,6 @@ export const ArticlePanel: React.FC<ArticlePanelProps> = ({
   articleContent,
   isMobile = false,
 }) => {
-  const [showShareOptions, setShowShareOptions] = useState(false);
-
   const getArticleTitleAndContent = (content: string) => {
     const lines = content.split('\n');
     const firstLine = lines[0]?.trim() || '';
@@ -25,33 +23,14 @@ export const ArticlePanel: React.FC<ArticlePanelProps> = ({
   const { title, content } = articleContent ? getArticleTitleAndContent(articleContent) : { title: '', content: '' };
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg shadow-sm border border-border overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 lg:p-6 border-b border-border bg-white">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 rounded-lg bg-gold text-cream">
-            <FaFileAlt className="text-lg lg:text-xl" />
-          </div>
-          <div>
-            <h2 className="font-playfair text-charcoal text-xl lg:text-2xl font-bold">Article</h2>
-            <p className="font-inter text-warm-gray text-sm">Editorial preview</p>
-          </div>
-        </div>
-
-        {/* Share Button - Only show when article exists */}
-        {articleContent && (
-          <button
-            onClick={() => setShowShareOptions(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cream text-charcoal hover:bg-light-gray border border-border hover:border-warm-gray transition-all duration-200"
-          >
-            <FaShare className="text-sm" />
-            <span className="font-inter text-sm font-medium">Share</span>
-          </button>
-        )}
+    <div className="flex flex-col h-full bg-white rounded-lg shadow-sm border border-border overflow-hidden relative">
+      {/* Article Actions - Now with proper z-index context */}
+      <div className="relative z-50">
+        <ArticleActions articleContent={articleContent} />
       </div>
 
-      {/* Article Content */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Article Content - With lower z-index */}
+      <div className="flex-1 overflow-y-auto relative z-10">
         {articleContent ? (
           <div className="p-4 lg:p-8 max-w-4xl mx-auto">
             {/* Title Section */}
@@ -61,7 +40,6 @@ export const ArticlePanel: React.FC<ArticlePanelProps> = ({
                   {title.replace(/^#+\s*/, '')}
                 </h1>
                 <div className="flex items-center gap-2 text-warm-gray font-inter text-sm">
-                  <FaPenNib className="text-xs" />
                   <span>Generated Article • {new Date().toLocaleDateString()}</span>
                 </div>
               </div>
@@ -99,15 +77,6 @@ export const ArticlePanel: React.FC<ArticlePanelProps> = ({
           </div>
         )}
       </div>
-
-      {/* Share Options Modal */}
-      {showShareOptions && (
-        <ShareOptions
-          articleContent={articleContent}
-          onClose={() => setShowShareOptions(false)}
-          isMobile={isMobile}
-        />
-      )}
     </div>
   );
 };
