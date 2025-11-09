@@ -24,7 +24,7 @@ export const generateArticle = async (prompt: string, sessionId: string | null, 
 export const streamAgentOutputs = async function* (prompt: string, sessionId: string | null, userId: string | null) {
     const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/generate/stream`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-api-key": import.meta.env.VITE_APP_API_KEY, },
         body: JSON.stringify({ prompt, session_id: sessionId, user_id: userId }),
         mode: "cors",
     });
