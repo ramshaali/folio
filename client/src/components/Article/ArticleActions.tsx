@@ -161,7 +161,7 @@ export const ArticleActions: React.FC<ArticleActionsProps> = ({
                         {/* Platform Icons - Inside the expanded container */}
                         <div className={`flex flex-col gap-2 py-2 transition-all duration-300 ${showShareOptions ? 'opacity-100' : 'opacity-0'
                             }`}>
-                            {sharePlatforms.map((platform, index) => {
+                            {sharePlatforms.map((platform) => {
                                 const Icon = platform.icon;
                                 return (
                                     <button
