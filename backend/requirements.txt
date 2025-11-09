@@ -1,0 +1,4 @@
+google-generativeai==0.8.5
+google-adk==1.18.0
+fastapi==0.121.0
+Pillow==12.0.0
