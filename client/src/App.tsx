@@ -10,14 +10,20 @@ const App: React.FC = () => {
   const [activeView, setActiveView] = useState<"chat" | "article">("chat");
   const [isMobile, setIsMobile] = useState(false);
 
-  // Load session from localStorage on component mount
+  // Load session and article from localStorage on component mount
   useEffect(() => {
     const savedSessionId = localStorage.getItem('folio_sessionId');
     const savedUserId = localStorage.getItem('folio_userId');
+    const savedArticle = savedSessionId ? localStorage.getItem(`folio_article_${savedSessionId}`) : null;
 
     if (savedSessionId && savedUserId) {
       setSessionId(savedSessionId);
       setUserId(savedUserId);
+
+      // Restore article content if it exists
+      if (savedArticle) {
+        setCurrentArticle(savedArticle);
+      }
     }
   }, []);
 
@@ -31,6 +37,16 @@ const App: React.FC = () => {
       localStorage.removeItem('folio_userId');
     }
   }, [sessionId, userId]);
+
+  // Save article content whenever it changes
+  useEffect(() => {
+    if (sessionId && currentArticle) {
+      localStorage.setItem(`folio_article_${sessionId}`, currentArticle);
+    } else if (sessionId && currentArticle === null) {
+      // Clear article if it's explicitly set to null
+      localStorage.removeItem(`folio_article_${sessionId}`);
+    }
+  }, [currentArticle, sessionId]);
 
   // Check if mobile on mount and resize
   useEffect(() => {
@@ -51,6 +67,12 @@ const App: React.FC = () => {
   }, [currentArticle, isMobile]);
 
   const handleNewSession = () => {
+    // Clear current session data from localStorage
+    if (sessionId) {
+      localStorage.removeItem(`folio_chatHistory_${sessionId}`);
+      localStorage.removeItem(`folio_article_${sessionId}`);
+    }
+
     // Clear both state and localStorage
     setSessionId(null);
     setUserId(null);
@@ -59,6 +81,10 @@ const App: React.FC = () => {
 
     localStorage.removeItem('folio_sessionId');
     localStorage.removeItem('folio_userId');
+  };
+
+  const handleSetCurrentArticle = (article: string | null) => {
+    setCurrentArticle(article);
   };
 
   return (
@@ -71,7 +97,7 @@ const App: React.FC = () => {
           userId={userId}
           setSessionId={setSessionId}
           setUserId={setUserId}
-          setCurrentArticle={setCurrentArticle}
+          setCurrentArticle={handleSetCurrentArticle}
           isMobile={isMobile}
           onSwitchToArticle={() => setActiveView("article")}
           onNewSession={handleNewSession}

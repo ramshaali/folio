@@ -13,14 +13,17 @@ interface MessageListProps {
     currentAgent: { name: string; text: string } | null;
     isStreaming: boolean;
     isMobile?: boolean;
+    sessionId: string | null;
 }
 
 export const MessageList: React.FC<MessageListProps> = ({
     messages,
     currentAgent,
     isStreaming,
-    isMobile = false
+    isMobile = false,
+    sessionId,
 }) => {
+    const showWelcomeMessage = messages.length === 0 && !isStreaming;
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -41,6 +44,39 @@ export const MessageList: React.FC<MessageListProps> = ({
     return (
         <div className={`flex-1 overflow-y-auto ${isMobile ? 'p-3 space-y-4' : 'p-4 lg:p-6 space-y-4 lg:space-y-6'
             }`}>
+            {showWelcomeMessage && (
+                <div className="flex flex-row gap-3 lg:gap-4 animate-fade-in-up">
+                    <div className={`flex-shrink-0 flex items-center justify-center rounded-full bg-charcoal text-cream ${isMobile ? 'w-7 h-7 text-xs' : 'w-8 h-8'}`}>
+                        A
+                    </div>
+                    <div className={`flex-1 bg-white rounded-lg border-l-2 lg:border-l-4 border-gold shadow-sm ${isMobile ? 'p-3' : 'p-4'}`}>
+                        <div className="prose prose-sm max-w-none font-lora text-charcoal">
+                            <h3 className="text-lg font-playfair font-bold text-charcoal mb-2">
+                                Welcome to Folio!
+                            </h3>
+                            <p className="text-warm-gray mb-3">
+                                I'm your editorial assistant, ready to help you create engaging articles and blog posts. Let's start by describing your article topic.
+                            </p>
+
+                            <div className="bg-cream/50 rounded-lg p-3 border border-border">
+                                <p className="text-sm text-warm-gray font-inter mb-2">
+                                    <strong>You can ask me to:</strong>
+                                </p>
+                                <ul className="text-sm text-warm-gray space-y-1 list-disc list-inside">
+                                    <li>Write an article about any topic</li>
+                                    <li>Research and include current information</li>
+                                    <li>Refine or improve existing content</li>
+                                    <li>Generate multiple versions</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div className="text-warm-gray mt-3 font-inter text-xs">
+                            {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {messages.map((msg, idx) => (
                 <div
                     key={idx}

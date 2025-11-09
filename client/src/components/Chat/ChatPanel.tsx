@@ -107,6 +107,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           currentUserId = res.data.user_id;
           setSessionId(currentSessionId as string);
           setUserId(currentUserId as string);
+
+          // Clear any previous article when starting new session
+          setCurrentArticle(null);
         } else {
           alert("Failed to start session.");
           return;
@@ -206,6 +209,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           currentAgent={currentAgent}
           isStreaming={isStreaming}
           isMobile={isMobile}
+          sessionId={sessionId}
         />
 
         <InputArea
