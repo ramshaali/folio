@@ -29,7 +29,7 @@ export const MessageList: React.FC<MessageListProps> = ({
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, currentAgent]);
 
-    const renderMessageContent = (content: string, role: "user" | "ai", type?: "normal" | "text" | "question") => {
+    const renderMessageContent = (content: string, role: "user" | "ai", _type?: "normal" | "text" | "question") => {
         if (role === "ai") {
             // Normal markdown for question and normal types
             return (
