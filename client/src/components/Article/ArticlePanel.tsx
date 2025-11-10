@@ -24,18 +24,18 @@ export const ArticlePanel: React.FC<ArticlePanelProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow-sm border border-border overflow-hidden relative">
-      {/* Article Actions - Now with proper z-index context */}
+      {/* Article Actions */}
       <div className="relative z-50">
-        <ArticleActions articleContent={articleContent} />
+        <ArticleActions articleContent={articleContent} isMobile={isMobile} />
       </div>
 
-      {/* Article Content - With lower z-index */}
-      <div className="flex-1 overflow-y-auto relative z-10">
+      {/* Article Content */}
+      <div className="flex-1 overflow-y-auto">
         {articleContent ? (
-          <div className="p-4 lg:p-8 max-w-4xl mx-auto">
+          <div className={`max-w-4xl mx-auto ${isMobile ? 'pt-16 px-4' : 'p-4 lg:p-8'}`}>
             {/* Title Section */}
             {title && (
-              <div className="mb-6 mr-4 lg:mb-12 pb-6 lg:pb-8 border-b border-border">
+              <div className="mb-6 lg:mb-12 pb-6 lg:pb-8 border-b border-border">
                 <h1 className="text-2xl lg:text-4xl font-bold text-charcoal font-playfair leading-tight tracking-tight mb-4">
                   {title.replace(/^#+\s*/, '')}
                 </h1>

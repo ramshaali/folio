@@ -7,34 +7,39 @@ import {
     FaLinkedin,
     FaWordpress,
     FaGhost,
-    FaDev
+    FaDev,
+    FaEllipsisV
 } from 'react-icons/fa';
 import { SiBlogger } from "react-icons/si";
 
 interface ArticleActionsProps {
     articleContent: string | null;
+    isMobile?: boolean;
 }
 
 export const ArticleActions: React.FC<ArticleActionsProps> = ({
-    articleContent
+    articleContent,
+    isMobile = false
 }) => {
     const [copied, setCopied] = useState(false);
     const [showShareOptions, setShowShareOptions] = useState(false);
+    const [showMobileMenu, setShowMobileMenu] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Close share options when clicking outside
+    // Close menus when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
                 setShowShareOptions(false);
+                setShowMobileMenu(false);
             }
         };
 
-        if (showShareOptions) {
+        if (showShareOptions || showMobileMenu) {
             document.addEventListener('mousedown', handleClickOutside);
             return () => document.removeEventListener('mousedown', handleClickOutside);
         }
-    }, [showShareOptions]);
+    }, [showShareOptions, showMobileMenu]);
 
     // Auto-hide copied state
     useEffect(() => {
@@ -64,6 +69,7 @@ export const ArticleActions: React.FC<ArticleActionsProps> = ({
             const plainText = stripMarkdown(articleContent);
             await navigator.clipboard.writeText(plainText);
             setCopied(true);
+            setShowMobileMenu(false);
         } catch (error) {
             console.error('Failed to copy:', error);
         }
@@ -111,10 +117,75 @@ export const ArticleActions: React.FC<ArticleActionsProps> = ({
     const handlePlatformClick = (url: string) => {
         window.open(url, '_blank', 'noopener,noreferrer');
         setShowShareOptions(false);
+        setShowMobileMenu(false);
     };
 
     if (!articleContent) return null;
 
+    // Mobile View - Three dots menu
+    if (isMobile) {
+        return (
+            <div ref={containerRef} className="absolute top-4 right-4">
+                {/* Mobile Menu Button */}
+                <div className="relative group">
+                    <button
+                        onClick={() => setShowMobileMenu(!showMobileMenu)}
+                        className="w-9 h-9 rounded-md flex items-center justify-center transition-all duration-300 border border-border text-warm-gray hover:border-gold hover:text-gold hover:bg-gold/5"
+                    >
+                        <FaEllipsisV className="text-xs" />
+                    </button>
+
+                    {/* Mobile Dropdown Menu */}
+                    {showMobileMenu && (
+                        <div className="absolute right-0 top-10 bg-white border border-border rounded-md shadow-lg py-2 min-w-40 z-50">
+                            {/* Copy Option */}
+                            <button
+                                onClick={handleCopy}
+                                className="w-full px-4 py-2 text-sm text-charcoal hover:bg-cream flex items-center gap-3 transition-colors"
+                            >
+                                {copied ? (
+                                    <FaCheck className="text-gold text-xs" />
+                                ) : (
+                                    <FaCopy className="text-xs" />
+                                )}
+                                <span>{copied ? 'Copied!' : 'Copy Article'}</span>
+                            </button>
+
+                            {/* Share Option */}
+                            <button
+                                onClick={() => setShowShareOptions(!showShareOptions)}
+                                className="w-full px-4 py-2 text-sm text-charcoal hover:bg-cream flex items-center gap-3 transition-colors border-t border-border"
+                            >
+                                <FaShare className="text-xs" />
+                                <span>Share</span>
+                            </button>
+
+                            {/* Share Platforms Submenu */}
+                            {showShareOptions && (
+                                <div className="border-t border-border bg-cream/30">
+                                    {sharePlatforms.map((platform) => {
+                                        const Icon = platform.icon;
+                                        return (
+                                            <button
+                                                key={platform.name}
+                                                onClick={() => handlePlatformClick(platform.url)}
+                                                className="w-full px-4 py-2 text-sm text-charcoal hover:bg-cream flex items-center gap-3 transition-colors"
+                                            >
+                                                <Icon className="text-xs" />
+                                                <span className='text-start'>Share to {platform.name}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    // Desktop View - Original layout
     return (
         <div ref={containerRef} className="absolute top-4 right-4">
             <div className="flex flex-col gap-2 items-end">
@@ -140,7 +211,7 @@ export const ArticleActions: React.FC<ArticleActionsProps> = ({
                     </div>
                 </div>
 
-                {/* Share Button - Actually Expands */}
+                {/* Share Button - Expanding */}
                 <div className="relative group">
                     {/* The actual expanding container */}
                     <div
