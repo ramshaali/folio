@@ -34,7 +34,6 @@ app.add_middleware(BaseHTTPMiddleware, dispatch=api_key_validator)
 # -----------------------
 register_routers(app)
 
-
 @app.get("/")
 def health_check():
     return {"status": "ok", "service": "Folio AI Multi-Agent Backend"}
