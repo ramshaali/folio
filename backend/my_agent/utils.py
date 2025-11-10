@@ -100,18 +100,34 @@ async def analyze_output_with_gemini(agent_name: str, text_output: str) -> dict:
     - If it's an article, populate 'article' with full markdown text and leave 'question' empty.
     """
     prompt = f"""
-You are given a text output from an agent named '{agent_name}'.
-Your task is to classify it as either an 'article' or a 'question' (clarification request).
+You will receive a text output from an agent named '{agent_name}'.
+
+Your task is to classify the text as either an **'article'** or a **'question'** (clarification request / instructional statement).
+
+Classification rules:
+
+1️⃣ It is an **article** if:
+- It contains multiple paragraphs OR
+- It contains narrative content, explanations, structured writing, or any long-form text.
+- It has headings, sections, or paragraph-style writing.
+
+2️⃣ It is a **question** if:
+- It is a direct question.
+- It is a short statement like: "I am this agent and I will help you write an article."
+- It is a meta-instruction, status message, intermediate response, or anything that is not article content.
+- It is a request for clarification or a prompt asking for more user input.
+
+📝 Output rules:
 
 If it is an article:
-- Return the FULL article in **proper Markdown format** (not partial).
-- Use clear section headings, proper line breaks, paragraphs, and bullet lists where applicable.
-- Preserve the article’s original structure, including all sections.
+- Return the **full article in Markdown format**.
+- Use proper heading levels, spacing, line breaks, paragraphs, lists, etc.
+- Preserve all structure exactly as given.
 
 If it is a question:
-- Return only the question text.
+- Return ONLY the question text (or short statement requiring clarification).
 
-Return ONLY valid JSON with this exact structure:
+Return ONLY valid JSON with this schema:
 
 {{
   "agent_name": "{agent_name}",
@@ -119,11 +135,16 @@ Return ONLY valid JSON with this exact structure:
   "question": "<clarifying question text, leave empty if it's an article>"
 }}
 
-Make sure the JSON is syntactically valid and that the article field contains properly formatted Markdown text if present.
+Do not add any extra fields.
+Do not return explanations or reasoning.
+Return only the JSON object.
+
+---
 
 Text to classify:
 \"\"\"{text_output}\"\"\"
 """
+
 
     response = client.models.generate_content(
         model="gemini-2.5-flash",
@@ -155,6 +176,7 @@ Text to classify:
             "question": "",
             "text": text_output,
         }
+
 
 
 # result = generate_image_from_article("This is a test article about AI.")
