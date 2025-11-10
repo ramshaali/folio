@@ -144,7 +144,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       if (finalArticleContent) {
         const completionMessage: Message = {
           role: "ai",
-          content: `**Article completed**\n\nYour article is ready in the preview panel.${isMobile ? " Swipe or use the toggle to view it." : ""}`,
+          content: `**Article completed**\n\nYour article is ready in the preview panel.${isMobile ? " Use the toggle to view it." : ""}`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
         setChatHistory(prev => [...prev, completionMessage]);
