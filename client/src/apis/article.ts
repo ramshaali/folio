@@ -1,4 +1,4 @@
-import { api } from "../utils/api";
+import { api, generateBrowserId } from "../utils/api";
 
 export interface StreamChunk {
     agent_name: string;
@@ -22,9 +22,16 @@ export const generateArticle = async (prompt: string, sessionId: string | null, 
 
 // Stream agent outputs (async generator)
 export const streamAgentOutputs = async function* (prompt: string, sessionId: string | null, userId: string | null) {
+    let browserId = localStorage.getItem("folio_browser_id");
+    if (!browserId)  browserId = generateBrowserId();
+
     const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/generate/stream`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": import.meta.env.VITE_APP_API_KEY, },
+        headers: {
+            "Content-Type": "application/json",
+            "x-api-key": import.meta.env.VITE_APP_API_KEY,
+            "x-browser-id": browserId, // <-- Key addition
+        },
         body: JSON.stringify({ prompt, session_id: sessionId, user_id: userId }),
         mode: "cors",
     });

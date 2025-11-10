@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from google.adk.runners import Runner
 from google.genai import types
-from core.session_manager import session_service, create_session
+from core.session_manager import create_or_update_session, session_service
 from my_agent.agent import root_agent
 from my_agent.utils import analyze_output_with_gemini
 from fastapi.responses import StreamingResponse
@@ -20,18 +20,20 @@ class GenerateRequest(BaseModel):
     
 
 @router.post("/stream")
-async def generate_article_stream(req: GenerateRequest):
+async def generate_article_stream(request: Request, req: GenerateRequest):
     if not req.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt cannot be empty")
+
+    browser_id = request.headers.get("x-browser-id")  # <-- Extract browser ID if available
+    if not browser_id:
+        raise HTTPException(status_code=400, detail="Missing x-browser-id header")
 
     user_id = req.user_id or f"user_{uuid.uuid4().hex[:8]}"
 
     if req.session_id:
         session_id = req.session_id
     else:
-        session = await create_session(user_id)
-        session_id = session.id
-
+        session = await create_or_update_session(browser_id, user_id)
 
     runner = Runner(
         app_name=APP_NAME,
