@@ -130,18 +130,18 @@ export const ArticleActions: React.FC<ArticleActionsProps> = ({
                 <div className="relative group">
                     <button
                         onClick={() => setShowMobileMenu(!showMobileMenu)}
-                        className="w-9 h-9 rounded-md flex items-center justify-center transition-all duration-300 border border-border text-warm-gray hover:border-gold hover:text-gold hover:bg-gold/5"
+                        className="w-9 h-9 rounded-md flex items-center justify-center transition-all duration-300 border border-border text-warm-gray hover:border-gold hover:text-gold bg-cream hover:bg-gold/5"
                     >
                         <FaEllipsisV className="text-xs" />
                     </button>
 
                     {/* Mobile Dropdown Menu */}
                     {showMobileMenu && (
-                        <div className="absolute right-0 top-10 bg-white border border-border rounded-md shadow-lg py-2 min-w-40 z-50">
+                        <div className="absolute right-0 top-10 bg-cream border border-border rounded-md shadow-lg py-2 min-w-40 z-50">
                             {/* Copy Option */}
                             <button
                                 onClick={handleCopy}
-                                className="w-full px-4 py-2 text-sm text-charcoal hover:bg-cream flex items-center gap-3 transition-colors"
+                                className="w-full px-4 py-2 text-sm text-charcoal hover:bg-cream flex items-center gap-3 transition-colors bg-cream"
                             >
                                 {copied ? (
                                     <FaCheck className="text-gold text-xs" />
@@ -154,7 +154,7 @@ export const ArticleActions: React.FC<ArticleActionsProps> = ({
                             {/* Share Option */}
                             <button
                                 onClick={() => setShowShareOptions(!showShareOptions)}
-                                className="w-full px-4 py-2 text-sm text-charcoal hover:bg-cream flex items-center gap-3 transition-colors border-t border-border"
+                                className="w-full px-4 py-2 text-sm text-charcoal hover:bg-cream flex items-center gap-3 transition-colors border-t border-border bg-cream"
                             >
                                 <FaShare className="text-xs" />
                                 <span>Share</span>
@@ -169,7 +169,7 @@ export const ArticleActions: React.FC<ArticleActionsProps> = ({
                                             <button
                                                 key={platform.name}
                                                 onClick={() => handlePlatformClick(platform.url)}
-                                                className="w-full px-4 py-2 text-sm text-charcoal hover:bg-cream flex items-center gap-3 transition-colors"
+                                                className="w-full px-4 py-2 text-sm text-charcoal hover:bg-cream flex items-center gap-3 transition-colors bg-cream"
                                             >
                                                 <Icon className="text-xs" />
                                                 <span className='text-start'>Share to {platform.name}</span>
@@ -185,7 +185,7 @@ export const ArticleActions: React.FC<ArticleActionsProps> = ({
         );
     }
 
-    // Desktop View - Original layout
+    // Desktop View - Updated with non-transparent buttons
     return (
         <div ref={containerRef} className="absolute top-4 right-4">
             <div className="flex flex-col gap-2 items-end">
@@ -193,10 +193,11 @@ export const ArticleActions: React.FC<ArticleActionsProps> = ({
                 <div className="relative group">
                     <button
                         onClick={handleCopy}
-                        className={`w-9 h-9 rounded-md flex items-center justify-center transition-all duration-300 border ${copied
-                                ? 'border-gold text-gold bg-gold/5 scale-110'
-                                : 'border-border text-warm-gray hover:border-gold hover:text-gold hover:bg-gold/5'
-                            }`}
+                        className={`w-9 h-9 rounded-md flex items-center justify-center transition-all duration-300 border bg-cream ${
+                            copied
+                                ? 'border-gold text-gold scale-110'
+                                : 'border-border text-warm-gray hover:border-gold hover:text-gold'
+                        }`}
                     >
                         {copied ? (
                             <FaCheck className="text-xs" />
@@ -215,23 +216,26 @@ export const ArticleActions: React.FC<ArticleActionsProps> = ({
                 <div className="relative group">
                     {/* The actual expanding container */}
                     <div
-                        className={`flex flex-col items-center transition-all duration-500 border rounded-md overflow-hidden ${showShareOptions
-                                ? 'h-[255px] w-9 bg-white border-gold shadow-sm'
+                        className={`flex flex-col items-center transition-all duration-500 border rounded-md overflow-hidden bg-cream ${
+                            showShareOptions
+                                ? 'h-[255px] w-9 border-gold shadow-sm'
                                 : 'h-9 w-9 border-border'
-                            }`}
+                        }`}
                     >
                         {/* Share Toggle - Always at top */}
                         <button
                             onClick={() => setShowShareOptions(!showShareOptions)}
-                            className={`w-9 h-9 mt-1 p-2 flex items-center justify-center transition-colors duration-300 ${showShareOptions ? 'text-gold' : 'text-warm-gray hover:text-gold'
-                                }`}
+                            className={`w-9 h-9 mt-1 p-2 flex items-center justify-center transition-colors duration-300 bg-cream ${
+                                showShareOptions ? 'text-gold' : 'text-warm-gray hover:text-gold'
+                            }`}
                         >
                             <FaShare className="text-xs" />
                         </button>
 
                         {/* Platform Icons - Inside the expanded container */}
-                        <div className={`flex flex-col gap-2 py-2 transition-all duration-300 ${showShareOptions ? 'opacity-100' : 'opacity-0'
-                            }`}>
+                        <div className={`flex flex-col gap-2 py-2 transition-all duration-300 ${
+                            showShareOptions ? 'opacity-100' : 'opacity-0'
+                        }`}>
                             {sharePlatforms.map((platform) => {
                                 const Icon = platform.icon;
                                 return (
